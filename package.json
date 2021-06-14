@@ -1,0 +1,50 @@
+{
+  "name": "isomp4",
+  "version": "0.0.1",
+  "description": "A modern, flexible, and extensible parsing framework for ISO/IEC 14496-12 (MPEG-4 Part 12)",
+  "keywords": [
+    "iso",
+    "bmff",
+    "mp4",
+    "parse",
+    "codec",
+    "box"
+  ],
+  "author": "Bradley Odell <btodell@hotmail.com>",
+  "contributors": [
+    "Bradley Odell <btodell@hotmail.com>"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/BTOdell/isomp4.git"
+  },
+  "bugs": {
+    "url": "https://github.com/BTOdell/isomp4/issues"
+  },
+  "homepage": "https://github.com/BTOdell/isomp4#readme",
+  "license": "MPL-2.0",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^4.27.0",
+    "@typescript-eslint/parser": "^4.27.0",
+    "eslint": "^7.28.0",
+    "npm-run-all": "^4.1.5",
+    "shx": "^0.3.3",
+    "typescript": "^4.3.2"
+  },
+  "scripts": {
+    "lint": "eslint --quiet --ext .ts ./",
+    "compile": "tsc -b",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "clean": "npm run clean --workspaces",
+    "clean-nm": "npx shx rm -rf ./**/node_modules",
+    "clean-all": "run-s -cs clean clean-nm"
+  },
+  "engines": {
+    "node": ">=16.0.0",
+    "npm": ">=7.0.0"
+  }
+}

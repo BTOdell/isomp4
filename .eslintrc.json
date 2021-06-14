@@ -1,0 +1,314 @@
+{
+  "parser": "@typescript-eslint/parser",
+  "parserOptions": {
+    "ecmaVersion": 2020,
+    "sourceType": "module"
+  },
+  "plugins": [
+    "@typescript-eslint"
+  ],
+  "extends": [
+    "eslint:recommended",
+    "plugin:@typescript-eslint/recommended"
+  ],
+  "ignorePatterns": [
+    "**/dist/**"
+  ],
+  "rules": {
+    // TypeScript-ESLint supported rules
+    "@typescript-eslint/array-type": [
+      "error",
+      {
+        "default": "array-simple"
+      }
+    ],
+    "@typescript-eslint/ban-types": [
+      "error",
+      {
+        "types": {
+          "object": false
+        },
+        "extendDefaults": true
+      }
+    ],
+    "@typescript-eslint/consistent-type-assertions": [
+      "error",
+      {
+        "assertionStyle": "as",
+        "objectLiteralTypeAssertions": "never"
+      }
+    ],
+    "@typescript-eslint/consistent-type-imports": [
+      "error",
+      {
+        "prefer": "type-imports"
+      }
+    ],
+    "@typescript-eslint/explicit-member-accessibility": [
+      "error",
+      {
+        "accessibility": "explicit",
+        "overrides": {
+          "accessors": "explicit",
+          "constructors": "no-public",
+          "methods": "explicit",
+          "properties": "explicit",
+          "parameterProperties": "explicit"
+        }
+      }
+    ],
+    "@typescript-eslint/explicit-module-boundary-types": [
+      "error",
+      {
+        "allowArgumentsExplicitlyTypedAsAny": true
+      }
+    ],
+    "@typescript-eslint/member-delimiter-style": [
+      "error",
+      {
+        "multiline": {
+          "delimiter": "semi",
+          "requireLast": true
+        },
+        "singleline": {
+          "delimiter": "semi",
+          "requireLast": true
+        },
+        "overrides": {
+          "typeLiteral": {
+            "multiline": {
+              "delimiter": "comma",
+              "requireLast": true
+            },
+            "singleline": {
+              "delimiter": "comma",
+              "requireLast": false
+            }
+          }
+        }
+      }
+    ],
+    "@typescript-eslint/no-confusing-non-null-assertion": "error",
+    "@typescript-eslint/no-dynamic-delete": "error",
+    "@typescript-eslint/no-explicit-any": "off",
+    "@typescript-eslint/no-empty-interface": [
+      "warn",
+      {
+        "allowSingleExtends": true
+      }
+    ],
+    "@typescript-eslint/no-inferrable-types": "off",
+    "@typescript-eslint/no-namespace": "off",
+    "@typescript-eslint/no-parameter-properties": "error",
+    "@typescript-eslint/prefer-for-of": "error",
+    "@typescript-eslint/prefer-includes": "off", // Needs static type checking
+    "@typescript-eslint/prefer-literal-enum-member": "error",
+    "@typescript-eslint/prefer-nullish-coalescing": "off", // Needs static type checking
+    "@typescript-eslint/prefer-optional-chain": "error",
+    "@typescript-eslint/prefer-readonly": "off", // Needs static type checking
+    "@typescript-eslint/prefer-readonly-parameter-types": "off", // Needs static type checking
+    "@typescript-eslint/prefer-string-starts-ends-with": "off", // Needs static type checking
+    "@typescript-eslint/prefer-ts-expect-error": "error",
+    "@typescript-eslint/strict-boolean-expressions": "off", // Needs static type checking
+    "@typescript-eslint/switch-exhaustiveness-check": "off", // Needs static type checking
+    "@typescript-eslint/type-annotation-spacing": "error",
+
+    // TypeScript-ESLint extension rules
+    "brace-style": "off",
+    "@typescript-eslint/brace-style": [
+      "error",
+      "1tbs"
+    ],
+    "comma-dangle": "off",
+    "@typescript-eslint/comma-dangle": [
+      "error",
+      "always-multiline"
+    ],
+    "comma-spacing": "off",
+    "@typescript-eslint/comma-spacing": "error",
+    "default-param-last": "off",
+    "@typescript-eslint/default-param-last": "error",
+    "func-call-spacing": "off",
+    "@typescript-eslint/func-call-spacing": "error",
+    "indent": [
+      "error",
+      4,
+      {
+        "SwitchCase": 1,
+        "FunctionExpression": {
+          "parameters": "first"
+        },
+        "FunctionDeclaration": {
+          "parameters": "first"
+        },
+        "CallExpression": {
+          "arguments": "off"
+        }
+      }
+    ],
+    "@typescript-eslint/indent": "off", // Apparently, this rule is bugged. So use eslint version for now.
+    "keyword-spacing": "off",
+    "@typescript-eslint/keyword-spacing": "error",
+    "no-array-constructor": "off",
+    "@typescript-eslint/no-array-constructor": "error",
+    "no-extra-parens": "off",
+    "@typescript-eslint/no-extra-parens": "error",
+    "no-unused-vars": "off",
+    "@typescript-eslint/no-unused-vars": [
+      "error",
+      {
+        "vars": "all",
+        "args": "none"
+      }
+    ],
+    "quotes": "off",
+    "@typescript-eslint/quotes": "error",
+    "semi": "off",
+    "@typescript-eslint/semi": "error",
+    "space-before-function-paren": "off",
+    "@typescript-eslint/space-before-function-paren": [
+      "error",
+      {
+        "anonymous": "always",
+        "named": "never",
+        "asyncArrow": "always"
+      }
+    ],
+
+    // ESLint-only rules
+    "array-bracket-spacing": [
+      "error",
+      "never"
+    ],
+    "array-element-newline": [
+      "error",
+      "consistent"
+    ],
+    "block-spacing": [
+      "error",
+      "always"
+    ],
+    "comma-style": "error",
+    "computed-property-spacing": "error",
+    "curly": "error",
+    "eol-last": "error",
+    "key-spacing": [
+      "error",
+      {
+        "beforeColon": false,
+        "afterColon": true,
+        "mode": "strict"
+      }
+    ],
+    "lines-between-class-members": [
+      "error",
+      "always",
+      {
+        "exceptAfterSingleLine": true
+      }
+    ],
+    "multiline-comment-style": [
+      "error",
+      "separate-lines"
+    ],
+    "new-cap": [
+      "error",
+      {
+        "capIsNew": false,
+        "properties": false
+      }
+    ],
+    "new-parens": "error",
+    "newline-per-chained-call": "off",
+    "no-alert": "error",
+    "no-caller": "error",
+    "no-constant-condition": [
+      "error",
+      {
+        "checkLoops": false
+      }
+    ],
+    "no-else-return": "error",
+    "no-eval": "error",
+    "no-inner-declarations": "off",
+    "no-lonely-if": "off", // Would enable this if it supported detecting comments.
+    "no-multi-spaces": "error",
+    "no-new-object": "error",
+    "no-return-await": "error",
+    "no-tabs": "error",
+    "no-trailing-spaces": "error",
+    "no-useless-return": "error",
+    "no-var": "error",
+    "no-void": "error",
+    "no-whitespace-before-property": "error",
+    "object-curly-newline": [
+      "error",
+      {
+        "consistent": true
+      }
+    ],
+    "object-curly-spacing": [
+      "error",
+      "never"
+    ],
+    "operator-assignment": [
+      "error",
+      "always"
+    ],
+    "operator-linebreak": [
+      "error",
+      "after"
+    ],
+    "padded-blocks": [
+      "error",
+      {
+        "blocks": "never",
+        "classes": "always",
+        "switches": "never"
+      }
+    ],
+    "prefer-const": "error",
+    "semi-spacing": [
+      "error",
+      {
+        "before": false,
+        "after": true
+      }
+    ],
+    "semi-style": [
+      "error",
+      "last"
+    ],
+    "space-before-blocks": [
+      "error",
+      "always"
+    ],
+    "space-in-parens": [
+      "error",
+      "never"
+    ],
+    "space-infix-ops": "error",
+    "space-unary-ops": [
+      "error",
+      {
+        "words": true,
+        "nonwords": false
+      }
+    ],
+    "switch-colon-spacing": [
+      "error",
+      {
+        "after": true,
+        "before": false
+      }
+    ],
+    "yoda": [
+      "error",
+      "never",
+      {
+        "exceptRange": true
+      }
+    ]
+  },
+  "reportUnusedDisableDirectives": true
+}
