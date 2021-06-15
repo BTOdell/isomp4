@@ -1,0 +1,44 @@
+{
+  "name": "@isomp4/core",
+  "version": "0.0.1",
+  "description": "",
+  "keywords": [
+    "iso",
+    "bmff",
+    "mp4",
+    "parse",
+    "codec",
+    "box"
+  ],
+  "author": {
+    "name": "Bradley Odell",
+    "url": "https://github.com/BTOdell"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/BTOdell/isomp4.git",
+    "directory": "packages/core"
+  },
+  "homepage": "https://github.com/BTOdell/isomp4/tree/master/packages/core#readme",
+  "license": "MPL-2.0",
+  "publishConfig": {
+    "access": "public"
+  },
+  "type": "module",
+  "main": "./cjs/core.js",
+  "module": "./dist/core.js",
+  "exports": {
+    ".": {
+      "require": "./cjs/core.js",
+      "default": "./dist/core.js"
+    }
+  },
+  "types": "./dist/core.d.ts",
+  "scripts": {
+    "clean": "shx rm -rf ./dist ./cjs/**/*.js ./cjs/**/*.js.map ./cjs/**/*.d.ts ./test/**/*.js ./test/**/*.js.map ./test/**/*.d.ts ./**/*.tsbuildinfo"
+  },
+  "engines": {
+    "node": ">=16.0.0",
+    "npm": ">=7.0.0"
+  }
+}
