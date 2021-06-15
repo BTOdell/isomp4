@@ -1,14 +1,13 @@
 {
-  "name": "@isomp4/core",
+  "name": "@isomp4/box-moof",
   "version": "0.0.1",
-  "description": "Defines base types and interfaces",
+  "description": "Implements encoding and decoding of the moof box type",
   "keywords": [
     "iso",
     "bmff",
     "mp4",
-    "parse",
-    "codec",
-    "box"
+    "box",
+    "moof"
   ],
   "author": {
     "name": "Bradley Odell",
@@ -17,23 +16,23 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/BTOdell/isomp4.git",
-    "directory": "packages/core"
+    "directory": "boxes/moof"
   },
-  "homepage": "https://github.com/BTOdell/isomp4/tree/master/packages/core#readme",
+  "homepage": "https://github.com/BTOdell/isomp4/tree/master/boxes/moof#readme",
   "license": "MPL-2.0",
   "publishConfig": {
     "access": "public"
   },
   "type": "module",
-  "main": "./cjs/core.js",
-  "module": "./dist/core.js",
+  "main": "./cjs/moof.js",
+  "module": "./dist/moof.js",
   "exports": {
     ".": {
-      "require": "./cjs/core.js",
-      "default": "./dist/core.js"
+      "require": "./cjs/moof.js",
+      "default": "./dist/moof.js"
     }
   },
-  "types": "./dist/core.d.ts",
+  "types": "./dist/moof.d.ts",
   "scripts": {
     "clean": "shx rm -rf ./dist ./cjs/**/*.js ./cjs/**/*.js.map ./cjs/**/*.d.ts ./test/**/*.js ./test/**/*.js.map ./test/**/*.d.ts ./**/*.tsbuildinfo"
   },
