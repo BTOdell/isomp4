@@ -34,11 +34,14 @@
     }
   },
   "types": "./dist/core.d.ts",
+  "dependencies": {
+    "@isomp4/encoding": "file:../encoding"
+  },
   "scripts": {
     "clean": "shx rm -rf ./dist ./cjs/**/*.js ./cjs/**/*.js.map ./cjs/**/*.d.ts ./test/**/*.js ./test/**/*.js.map ./test/**/*.d.ts ./**/*.tsbuildinfo"
   },
   "engines": {
     "node": ">=16.0.0",
-    "npm": ">=7.0.0"
+    "npm": ">=7.14.0"
   }
 }

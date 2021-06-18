@@ -1,6 +1,6 @@
 import type {Buffer} from "buffer";
 
-type EncodeFunction = {
+type EncodeFunction<O> = {
 
     /**
      *
@@ -13,11 +13,11 @@ type EncodeFunction = {
      * @param buf
      * @param off
      */
-    (obj: object, buf?: Buffer, off?: number): Buffer,
+    (obj: O, buf?: Buffer, off?: number): Buffer,
 
 };
 
-type DecodeFunction = {
+type DecodeFunction<O> = {
 
     /**
      *
@@ -30,23 +30,23 @@ type DecodeFunction = {
      * @param start
      * @param end
      */
-    (buffer: Buffer, start?: number, end?: number): object,
+    (buffer: Buffer, start?: number, end?: number): O,
 
 };
 
 /**
  *
  */
-export interface Encoding {
+export interface Encoding<O> {
 
-    encode: EncodeFunction;
+    encode: EncodeFunction<O>;
 
-    decode: DecodeFunction;
+    decode: DecodeFunction<O>;
 
     /**
      *
      * @param obj
      */
-    encodingLength(obj: object): number;
+    encodingLength(obj: O): number;
 
 }
