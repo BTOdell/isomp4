@@ -5,7 +5,6 @@
     "module": "ES2015"
   },
   "references": [
-    { "path": "../../encoding/src"},
     { "path": "./tsconfig.cjs.json" }
   ]
 }

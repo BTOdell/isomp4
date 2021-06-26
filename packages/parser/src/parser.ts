@@ -1,71 +1,67 @@
 import {Buffer} from "buffer";
+import type {BoxEncoding, BoxHeader, FourCC} from "@isomp4/core";
 
-type InitBoxType = "ftyp" | "moov";
-type MediaBoxType = "moof" | "mdat";
+const EMPTY_BUFFER = Buffer.allocUnsafe(0);
 
-/**
- * A supported FourCC ("four-character code") box type.
- */
-export type BoxType = InitBoxType | MediaBoxType;
-
-/**
- * The size (in bytes) of a compact box header in the ISO base media file format.
- * This header includes the 32-bit unsigned `size` field and the 32-bit unsigned `type` field.
- * @see ISO/IEC 14496-12.
- */
-const BOX_HEADER_SIZE: number = 8;
-
-/**
- * Determines if the given string is a supported box type.
- * @param type The type to check.
- */
-export function isSupportedBoxType(type: string): type is BoxType {
-    switch (type) {
-        case "ftyp":
-        case "moov":
-        case "moof":
-        case "mdat":
-            return true;
-    }
-    return false;
+interface BoxState {
+    readonly size: number;
+    readonly type: string | null;
+    offset: number;
 }
 
 /**
- * Parses top-level boxes of a fragmented MP4 stream.
- * @see https://www.w3.org/TR/mse-byte-stream-format-isobmff/
- *
- * From the ISO BMFF specification, only "ftyp", "moov", "moof", and "mdat" are supported box types.
- * All other box types will be ignored.
+ * Parses the ISO BMFF box structure of an MP4 stream.
  */
 export abstract class AbstractMP4Parser {
 
     /**
-     * A buffer to store a compact box header.
+     * Registered box encodings.
      */
-    private readonly boxHeaderBuffer: Buffer;
+    private readonly boxes: Map<FourCC, BoxEncoding>;
 
     /**
-     * The current offset into the box header buffer to write data.
-     * This also acts as the number of bytes written to the box header buffer.
+     * A stack that keeps track of the current state in the MP4 box structure traversal.
      */
-    private boxHeaderOffset: number;
+    private readonly boxStack: BoxState[];
 
     /**
-     * The box that is currently being processed.
+     * A temporary buffer to store appended data before it's parsed.
+     * This buffer may be resized if a box requires more space before it can be fully parsed.
      */
-    private currentBox: {
-        readonly size: number,
-        readonly type: BoxType | null,
-        offset: number,
-    } | null;
+    private buffer: Buffer;
 
     /**
-     * Creates a new parser for a fragmented MP4 stream.
+     * The number of bytes needed in the buffer to parse the next part.
+     */
+    private bytesNeeded: number;
+
+    /**
+     * Creates a new parser for an MP4 stream.
      */
     protected constructor() {
-        this.boxHeaderBuffer = Buffer.alloc(BOX_HEADER_SIZE);
-        this.boxHeaderOffset = 0;
-        this.currentBox = null;
+        this.boxes = new Map();
+        this.boxStack = [];
+        this.buffer = EMPTY_BUFFER;
+        this.bytesNeeded = 0;
+    }
+
+    /**
+     *
+     * @param encoding
+     */
+    public registerBox(encoding: BoxEncoding): void {
+        if (this.boxes.has(encoding.type)) {
+            throw new Error("Box type is already registered: " + encoding.type);
+        }
+        this.boxes.set(encoding.type, encoding);
+    }
+
+    /**
+     *
+     * @param boxType
+     */
+    public isBoxRegistered(boxType: FourCC): boolean {
+        return this.boxes.has(boxType);
     }
 
     /**
@@ -73,89 +69,88 @@ export abstract class AbstractMP4Parser {
      * @param data The new data to append. This data does NOT need to be a complete segment (or even a fragment).
      */
     public append(data: ArrayBufferView): void {
-        // Handle main MP4 box parsing
-        const buf: Buffer = Buffer.from(data.buffer, data.byteOffset, data.byteLength);
-        let offset: number = 0;
-        let available: number;
-        while ((available = buf.byteLength - offset) > 0) {
-            if (this.currentBox != null) {
-                // Pass through box data
-                const needed: number = this.currentBox.size - this.currentBox.offset;
-                const transfer: number = Math.min(available, needed);
-                const newOffset: number = offset + transfer;
-                if (this.currentBox.type != null) {
-                    const boxData: Buffer = buf.slice(offset, newOffset);
-                    this.onBoxData(this.currentBox.type, boxData);
-                }
-                this.currentBox.offset += transfer;
-                offset = newOffset;
-                // Once passed the box data, signal end of box and reset for next box
-                if (this.currentBox.offset >= this.currentBox.size) {
-                    if (this.currentBox.type != null) {
-                        this.onBoxEnded(this.currentBox.type);
+        let input: Buffer = Buffer.from(data.buffer, data.byteOffset, data.byteLength);
+        while (input.length > 0) {
+            if (this.bytesNeeded > 0) {
+                // Ensure that buffer is the correct size
+                this.ensureBuffer(this.bytesNeeded);
+                // Don't copy more data into the temp buffer than is needed for the next part!
+                const needed: number = this.bytesNeeded - this.buffer.byteOffset;
+                if (needed > 0) {
+                    if (needed <= input.length) {
+                        // Only copy 'needed' number of bytes into the temp buffer
+                        input.copy(this.buffer, 0, 0, needed);
+                        input = input.slice(needed);
+                    } else {
+                        // All input can be copied into temp buffer
+                        this.buffer = this.buffer.slice(input.copy(this.buffer));
+                        // More input data is needed
+                        return;
                     }
-                    this.currentBox = null;
                 }
+                // Temp buffer now contains all bytes needed
+                // Flip buffer
+                const bytesNeeded = this.bytesNeeded;
+                const buf = Buffer.from(this.buffer.buffer, 0, bytesNeeded);
+                this.bytesNeeded = 0; // This must be reset before calling processBuffer()
+                const bytesConsumed: number = this.processBuffer(buf);
+                if (bytesConsumed !== bytesNeeded) {
+                    throw new Error(`bytes consumed(${bytesConsumed}) != bytes needed(${bytesNeeded})`);
+                }
+                // Reset buffer
+                this.buffer = Buffer.from(this.buffer.buffer);
             } else {
-                // Write data into box header buffer until full
-                {
-                    const needed: number = this.boxHeaderBuffer.byteLength - this.boxHeaderOffset;
-                    const transfer: number = Math.min(available, needed);
-                    const newOffset: number = offset + transfer;
-                    buf.copy(this.boxHeaderBuffer, this.boxHeaderOffset, offset, newOffset);
-                    this.boxHeaderOffset += transfer;
-                    offset = newOffset;
-                }
-                // Once full, create current box from buffer data
-                if (this.boxHeaderOffset >= this.boxHeaderBuffer.byteLength) {
-                    const size: number = this.boxHeaderBuffer.readUInt32BE(0);
-                    const type: string = this.boxHeaderBuffer.toString("binary", 4, 8);
-                    if (size === 0) {
-                        throw new Error("Box cannot extend indefinitely.");
-                    } else if (size === 1) {
-                        throw new Error("Largesize mode is not supported.");
-                    } else if (size < BOX_HEADER_SIZE) {
-                        throw new Error("Invalid box size: " + size);
-                    } else if (size === BOX_HEADER_SIZE) {
-                        throw new Error("Empty box not supported.");
-                    }
-                    const boxType: BoxType | null = isSupportedBoxType(type) ? type : null;
-                    this.currentBox = {
-                        size: size,
-                        type: boxType,
-                        offset: BOX_HEADER_SIZE,
-                    };
-                    // Invoke box start event
-                    if (boxType != null) {
-                        this.onBoxStarted(size, boxType, this.boxHeaderBuffer);
-                    }
-                    // Reset box header
-                    this.boxHeaderOffset = 0;
+                // Avoid copying data by using the input buffer directly
+                const bytesConsumed: number = this.processBuffer(input);
+                if (bytesConsumed > 0) {
+                    input = input.slice(bytesConsumed);
                 }
             }
         }
     }
 
+    private ensureBuffer(capacity: number): void {
+        if (this.buffer.buffer.byteLength < capacity) {
+            const newBuffer: Buffer = Buffer.alloc(capacity);
+            // If the byteOffset is zero, then this indicates that there is no data written to the buffer
+            if (this.buffer.byteOffset > 0) {
+                // Must copy old buffer to new buffer
+                Buffer.from(this.buffer.buffer).copy(newBuffer);
+            }
+            this.buffer = newBuffer;
+        }
+    }
+
+    /**
+     *
+     * @param buffer
+     * @return The number of bytes from the buffer that were consumed.
+     */
+    private processBuffer(buffer: Buffer): number {
+        // TODO
+        return 0;
+    }
+
     /**
      * Invoked when a new box starts from the source.
-     * @param size The size of the box.
-     * @param type The type of the box.
-     * @param header The raw header data of the box.
+     * @param header The parsed header data of the box.
+     * @param headerData The raw header data of the box.
+     * @return Whether the traverse the children of this box.
      */
-    protected abstract onBoxStarted(size: number, type: BoxType, header: Buffer): void;
+    protected abstract onBoxStarted(header: BoxHeader, headerData: Buffer): void;
 
     /**
      * Invoked when new data is received for the current box.
      * @param type The type of the current box.
      * @param data The data of the box.
      */
-    protected abstract onBoxData(type: BoxType, data: Buffer): void;
+    protected abstract onBoxData(type: string, data: Buffer): void;
 
     /**
      * Invoked when the current box ends.
      * @param type The type of the box that ended.
      */
-    protected abstract onBoxEnded(type: BoxType): void;
+    protected abstract onBoxEnded(type: string): void;
 
 }
 
@@ -168,15 +163,15 @@ export class MP4Parser extends AbstractMP4Parser {
     public boxData?: typeof MP4Parser.prototype.onBoxData;
     public boxEnded?: typeof MP4Parser.prototype.onBoxEnded;
 
-    protected onBoxStarted(size: number, type: BoxType, header: Buffer): void {
-        this.boxStarted?.(size, type, header);
+    protected onBoxStarted(header: BoxHeader, headerData: Buffer): void {
+        this.boxStarted?.(header, headerData);
     }
 
-    protected onBoxData(type: BoxType, data: Buffer): void {
+    protected onBoxData(type: string, data: Buffer): void {
         this.boxData?.(type, data);
     }
 
-    protected onBoxEnded(type: BoxType): void {
+    protected onBoxEnded(type: string): void {
         this.boxEnded?.(type);
     }
 

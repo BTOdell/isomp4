@@ -4,6 +4,12 @@
 
 # Generated JavaScript files
 dist/
+boxes/**/cjs/**/*.js
+boxes/**/cjs/**/*.js.map
+boxes/**/cjs/**/*.d.ts
+boxes/**/test/**/*.js
+boxes/**/test/**/*.js.map
+boxes/**/test/**/*.d.ts
 packages/**/cjs/**/*.js
 packages/**/cjs/**/*.js.map
 packages/**/cjs/**/*.d.ts

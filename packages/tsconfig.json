@@ -2,7 +2,6 @@
   "files": [],
   "references": [
     { "path": "core" },
-    { "path": "encoding" },
     { "path": "parser" }
   ]
 }

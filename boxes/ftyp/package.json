@@ -34,7 +34,8 @@
   },
   "types": "./dist/ftyp.d.ts",
   "dependencies": {
-    "@isomp4/core": "file:../../packages/core"
+    "@isomp4/core": "file:../../packages/core",
+    "buffer": "^6.0.0"
   },
   "scripts": {
     "clean": "shx rm -rf ./dist ./cjs/**/*.js ./cjs/**/*.js.map ./cjs/**/*.d.ts ./test/**/*.js ./test/**/*.js.map ./test/**/*.d.ts ./**/*.tsbuildinfo"
