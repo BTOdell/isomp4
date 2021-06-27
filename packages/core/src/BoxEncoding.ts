@@ -105,9 +105,9 @@ export abstract class AbstractBoxEncoding<B extends Box = Box> implements BoxEnc
         if (typeof parsedHeader === "number") {
             return parsedHeader;
         }
-        const parsedBox = this.decodeWithHeader(parsedHeader, buffer.slice(parsedHeader.length));
+        const parsedBox = this.decodeWithHeader(parsedHeader, buffer.slice(parsedHeader.headerLength));
         if (typeof parsedBox === "number") {
-            return parsedHeader.length + parsedBox;
+            return parsedHeader.headerLength + parsedBox;
         }
         return parsedBox;
     }

@@ -1,11 +1,11 @@
 import {Buffer} from "buffer";
 
 /**
- * The size (in bytes) of a compact box header in the ISO base media file format.
+ * The length (in bytes) of a compact box header in the ISO base media file format.
  * This header includes the 32-bit unsigned `size` field and the 32-bit unsigned `type` field.
  * @see ISO/IEC 14496-12.
  */
-export const BOX_HEADER_SIZE: number = 8;
+export const BOX_HEADER_LENGTH: number = 8;
 
 const MAX_LARGE_SIZE: bigint = BigInt(Number.MAX_SAFE_INTEGER);
 
@@ -22,7 +22,7 @@ export interface BoxHeader {
     /**
      * The length (in bytes) of just this header.
      */
-    readonly length: number;
+    readonly headerLength: number;
 
     /**
      * The number of bytes of the entire box, including header, fields, and children.
@@ -57,10 +57,10 @@ export interface Box extends BoxHeader {}
  * number of bytes needed to read the box header.
  */
 export function parseBoxHeader(buffer: Buffer): BoxHeader | number {
-    let length: number = BOX_HEADER_SIZE;
+    let headerLength: number = BOX_HEADER_LENGTH;
     // 'size' and 'type' are always required
-    if (buffer.length < length) {
-        return length;
+    if (buffer.length < headerLength) {
+        return headerLength;
     }
     let size: number = buffer.readUInt32BE(0);
     const type: FourCC = buffer.toString("binary", 4, 8);
@@ -69,8 +69,8 @@ export function parseBoxHeader(buffer: Buffer): BoxHeader | number {
     if (size === 0) {
         throw new Error("box cannot extend indefinitely");
     } else if (size === 1) {
-        if (buffer.length < (length += 8)) {
-            return length;
+        if (buffer.length < (headerLength += 8)) {
+            return headerLength;
         }
         largesize = buffer.readBigUInt64BE(offset).valueOf();
         if (largesize > MAX_LARGE_SIZE) {
@@ -79,21 +79,21 @@ export function parseBoxHeader(buffer: Buffer): BoxHeader | number {
         offset += 8;
         // If the largesize can be stored in the normal size, then do so
         size = Number(largesize);
-    } else if (size < length) {
+    } else if (size < headerLength) {
         throw new Error("invalid box size: " + size);
-    } else if (size === length) {
+    } else if (size === headerLength) {
         throw new Error("empty box not supported");
     }
     // Check for user-defined type
     let usertype: Buffer | undefined;
     if (type === "uuid") {
-        if (buffer.length < (length += 16)) {
-            return length;
+        if (buffer.length < (headerLength += 16)) {
+            return headerLength;
         }
         usertype = Buffer.from(buffer.slice(offset, offset + 16));
     }
     return {
-        length,
+        headerLength,
         size,
         type,
         largesize,
@@ -109,7 +109,7 @@ export interface FullBoxHeader {
     /**
      * The length (in bytes) of just this header.
      */
-    readonly length: number;
+    readonly fullHeaderLength: number;
 
     /**
      * Specifies the version of this format of the box.
@@ -139,7 +139,7 @@ export function parseFullBoxHeader(buffer: Buffer): FullBoxHeader | number {
     const version: number = buffer.readUInt8(0);
     const flags: number = buffer.readUIntBE(1, 3);
     return {
-        length: 4,
+        fullHeaderLength: 4,
         version,
         flags,
     };

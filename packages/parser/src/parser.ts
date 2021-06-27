@@ -1,5 +1,6 @@
 import {Buffer} from "buffer";
 import type {BoxEncoding, BoxHeader, FourCC} from "@isomp4/core";
+import {parseBoxHeader} from "@isomp4/core";
 
 const EMPTY_BUFFER = Buffer.allocUnsafe(0);
 
@@ -93,18 +94,18 @@ export abstract class AbstractMP4Parser {
                 const bytesNeeded = this.bytesNeeded;
                 const buf = Buffer.from(this.buffer.buffer, 0, bytesNeeded);
                 this.bytesNeeded = 0; // This must be reset before calling processBuffer()
-                const bytesConsumed: number = this.processBuffer(buf);
+                const bytesConsumed: number = this.processBuffer(buf).byteOffset;
                 if (bytesConsumed !== bytesNeeded) {
                     throw new Error(`bytes consumed(${bytesConsumed}) != bytes needed(${bytesNeeded})`);
+                }
+                if (this.bytesNeeded > 0) {
+                    throw new Error("bytes needed was set");
                 }
                 // Reset buffer
                 this.buffer = Buffer.from(this.buffer.buffer);
             } else {
                 // Avoid copying data by using the input buffer directly
-                const bytesConsumed: number = this.processBuffer(input);
-                if (bytesConsumed > 0) {
-                    input = input.slice(bytesConsumed);
-                }
+                input = this.processBuffer(input);
             }
         }
     }
@@ -122,13 +123,17 @@ export abstract class AbstractMP4Parser {
     }
 
     /**
-     *
-     * @param buffer
-     * @return The number of bytes from the buffer that were consumed.
+     * Processes the given buffer.
+     * @param buffer The input buffer.
+     * @return A buffer with consumed bytes being sliced off.
      */
-    private processBuffer(buffer: Buffer): number {
+    private processBuffer(buffer: Buffer): Buffer {
+        const header: BoxHeader | number = parseBoxHeader(buffer);
+        if (typeof header === "number") {
+            this.bytesNeeded = header;
+        }
         // TODO
-        return 0;
+        return buffer;
     }
 
     /**
