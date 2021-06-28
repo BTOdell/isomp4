@@ -1,12 +1,12 @@
 import {Buffer} from "buffer";
-import type {BoxEncoding, BoxHeader, FourCC} from "@isomp4/core";
+import type {Box, BoxEncoding, BoxHeader, FourCC} from "@isomp4/core";
 import {parseBoxHeader} from "@isomp4/core";
 
 const EMPTY_BUFFER = Buffer.allocUnsafe(0);
 
 interface BoxState {
-    readonly size: number;
-    readonly type: string | null;
+    readonly header: BoxHeader;
+    readonly box: Box;
     offset: number;
 }
 
@@ -35,6 +35,11 @@ export abstract class AbstractMP4Parser {
      * The number of bytes needed in the buffer to parse the next part.
      */
     private bytesNeeded: number;
+
+    /**
+     * TODO
+     */
+    private boxHeader?: BoxHeader;
 
     /**
      * Creates a new parser for an MP4 stream.
@@ -128,11 +133,38 @@ export abstract class AbstractMP4Parser {
      * @return A buffer with consumed bytes being sliced off.
      */
     private processBuffer(buffer: Buffer): Buffer {
-        const header: BoxHeader | number = parseBoxHeader(buffer);
-        if (typeof header === "number") {
-            this.bytesNeeded = header;
+        while (buffer.length > 0) {
+            let consumed: number;
+            if (this.boxHeader == null) {
+                const header: BoxHeader | number = parseBoxHeader(buffer);
+                if (typeof header === "number") {
+                    this.bytesNeeded = header;
+                    break;
+                }
+                this.boxHeader = header;
+                // Invoke box started event
+                this.onBoxStarted(this.boxHeader, buffer.slice(0, header.headerLength));
+                consumed = header.headerLength;
+            } else {
+                const encoding: BoxEncoding | undefined = this.boxes.get(this.boxHeader.type);
+                if (encoding == null) {
+                    // TODO no encoding for box type, must skip entire box and children (use size)
+                    continue;
+                }
+                const box = encoding.decodeWithHeader(this.boxHeader, buffer);
+                if (typeof box === "number") {
+                    this.bytesNeeded = box;
+                    break;
+                }
+                consumed = box.length - box.headerLength;
+                this.boxStack.push({
+                    header: this.boxHeader,
+                    box: box,
+                    offset: consumed,
+                });
+            }
+            buffer = buffer.slice(consumed);
         }
-        // TODO
         return buffer;
     }
 

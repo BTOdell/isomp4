@@ -47,7 +47,14 @@ export interface BoxHeader {
 
 }
 
-export interface Box extends BoxHeader {}
+export interface Box extends BoxHeader {
+
+    /**
+     * The length (in bytes) of the box (excluding the children).
+     */
+    readonly length: number;
+
+}
 
 /**
  * Parses the given buffer into a box header object.
