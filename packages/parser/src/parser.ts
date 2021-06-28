@@ -5,9 +5,22 @@ import {parseBoxHeader} from "@isomp4/core";
 const EMPTY_BUFFER = Buffer.allocUnsafe(0);
 
 interface BoxState {
+
+    /**
+     *
+     */
     readonly header: BoxHeader;
-    readonly box: Box;
+
+    /**
+     *
+     */
+    readonly box: Box | null;
+
+    /**
+     *
+     */
     offset: number;
+
 }
 
 /**
@@ -37,9 +50,10 @@ export abstract class AbstractMP4Parser {
     private bytesNeeded: number;
 
     /**
-     * TODO
+     * The header of the current box.
+     * If this is <code>null</code>, then a box header will be parsed next.
      */
-    private boxHeader?: BoxHeader;
+    private boxHeader: BoxHeader | null;
 
     /**
      * Creates a new parser for an MP4 stream.
@@ -49,6 +63,7 @@ export abstract class AbstractMP4Parser {
         this.boxStack = [];
         this.buffer = EMPTY_BUFFER;
         this.bytesNeeded = 0;
+        this.boxHeader = null;
     }
 
     /**
@@ -146,9 +161,20 @@ export abstract class AbstractMP4Parser {
                 this.onBoxStarted(this.boxHeader, buffer.slice(0, header.headerLength));
                 consumed = header.headerLength;
             } else {
+                if (this.boxStack.length > 0) {
+                    const top: BoxState = this.boxStack[this.boxStack.length - 1];
+                    if (top.box == null) {
+                        // TODO
+                    }
+                }
                 const encoding: BoxEncoding | undefined = this.boxes.get(this.boxHeader.type);
                 if (encoding == null) {
                     // TODO no encoding for box type, must skip entire box and children (use size)
+                    this.boxStack.push({
+                        header: this.boxHeader,
+                        box: null,
+                        offset: this.boxHeader.headerLength,
+                    });
                     continue;
                 }
                 const box = encoding.decodeWithHeader(this.boxHeader, buffer);
@@ -162,6 +188,7 @@ export abstract class AbstractMP4Parser {
                     box: box,
                     offset: consumed,
                 });
+                this.boxHeader = null;
             }
             buffer = buffer.slice(consumed);
         }
@@ -172,22 +199,34 @@ export abstract class AbstractMP4Parser {
      * Invoked when a new box starts from the source.
      * @param header The parsed header data of the box.
      * @param headerData The raw header data of the box.
-     * @return Whether the traverse the children of this box.
+     * @return Whether to decode the box content (fields).
      */
-    protected abstract onBoxStarted(header: BoxHeader, headerData: Buffer): void;
+    protected abstract onBoxStarted(header: BoxHeader, headerData: Buffer): boolean;
+
+    /**
+     * Invoked when the box content is parsed.
+     * This will be invoked if {@link onBoxStarted} returns <code>true</code> for a box,
+     * otherwise {@link onBoxData} will be invoked with the remaining box data.
+     * @param box The box that was parsed.
+     * @param boxData The raw content data of the box (excluding header and children).
+     * @return Whether to decode the children boxes.
+     */
+    protected abstract onBoxDecoded(box: Box, boxData: Buffer): boolean;
 
     /**
      * Invoked when new data is received for the current box.
-     * @param type The type of the current box.
-     * @param data The data of the box.
+     * This will be invoked if either {@link onBoxStarted} or {@link onBoxDecoded} return <code>false</code> for a box.
+     * @param header The box that the data is for.
+     * @param boxData The raw data of the box (excluding header).
      */
-    protected abstract onBoxData(type: string, data: Buffer): void;
+    protected abstract onBoxData(header: BoxHeader, boxData: Buffer): void;
 
     /**
-     * Invoked when the current box ends.
-     * @param type The type of the box that ended.
+     * Invoked when a box ends.
+     * @param header The header of the box that ended.
+     * @param box The box that ended, if it was parsed.
      */
-    protected abstract onBoxEnded(type: string): void;
+    protected abstract onBoxEnded(header: BoxHeader, box?: Box): void;
 
 }
 
@@ -197,19 +236,24 @@ export abstract class AbstractMP4Parser {
 export class MP4Parser extends AbstractMP4Parser {
 
     public boxStarted?: typeof MP4Parser.prototype.onBoxStarted;
+    public boxDecoded?: typeof MP4Parser.prototype.onBoxDecoded;
     public boxData?: typeof MP4Parser.prototype.onBoxData;
     public boxEnded?: typeof MP4Parser.prototype.onBoxEnded;
 
-    protected onBoxStarted(header: BoxHeader, headerData: Buffer): void {
-        this.boxStarted?.(header, headerData);
+    protected onBoxStarted(header: BoxHeader, headerData: Buffer): boolean {
+        return this.boxStarted ? this.boxStarted(header, headerData) : false;
     }
 
-    protected onBoxData(type: string, data: Buffer): void {
-        this.boxData?.(type, data);
+    protected onBoxDecoded(box: Box, boxData: Buffer): boolean {
+        return this.boxDecoded ? this.boxDecoded(box, boxData) : false;
     }
 
-    protected onBoxEnded(type: string): void {
-        this.boxEnded?.(type);
+    protected onBoxData(header: BoxHeader, boxData: Buffer): void {
+        this.boxData?.(header, boxData);
+    }
+
+    protected onBoxEnded(header: BoxHeader, box?: Box): void {
+        this.boxEnded?.(header, box);
     }
 
 }
