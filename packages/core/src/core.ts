@@ -1,2 +1,2 @@
-export * from "./Box";
-export * from "./BoxEncoding";
+export * from "./Box.js";
+export * from "./BoxEncoding.js";

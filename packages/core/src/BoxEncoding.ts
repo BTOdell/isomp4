@@ -1,6 +1,6 @@
 import {Buffer} from "buffer";
-import type {Box, BoxHeader, FourCC} from "./Box";
-import {parseBoxHeader} from "./Box";
+import type {Box, BoxHeader, FourCC} from "./Box.js";
+import {parseBoxHeader} from "./Box.js";
 
 /**
  *
@@ -38,15 +38,18 @@ export interface BoxEncoding<B extends Box = Box> {
     /**
      * Encodes the given box into the given buffer.
      * @param obj The box to encode.
-     * @param buf The buffer to write to.
+     * @param buffer The buffer to write to.
      * @return The number of bytes of available space required in the buffer.
      * If <code>0</code>, then the box was successfully written to the buffer.
      */
-    encodeTo(obj: B, buf: Buffer): number;
+    encodeTo(obj: B, buffer: Buffer): number;
 
     /**
-     *
-     * @param buffer
+     * Decodes the given buffer into a box object.
+     * @param buffer The buffer to read from (starting at offset 0).
+     * @return A parsed box object,
+     * or if there isn't enough data in the buffer, returns the total
+     * number of bytes needed to decode the box.
      */
     decode(buffer: Buffer): B | number;
 
@@ -98,7 +101,7 @@ export abstract class AbstractBoxEncoding<B extends Box = Box> implements BoxEnc
         return buf;
     }
 
-    public abstract encodeTo(obj: B, buf: Buffer): number;
+    public abstract encodeTo(obj: B, buffer: Buffer): number;
 
     public decode(buffer: Buffer): B | number {
         const parsedHeader = parseBoxHeader(buffer);

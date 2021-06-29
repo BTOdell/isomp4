@@ -15,6 +15,19 @@ const MAX_LARGE_SIZE: bigint = BigInt(Number.MAX_SAFE_INTEGER);
 export type FourCC = string;
 
 /**
+ * Reads a four-character code from the given buffer at the given index.
+ * @param buffer The buffer to read from.
+ * @param i The index to read from in the buffer.
+ */
+export function readFourCC(buffer: Buffer, i: number): FourCC {
+    const fourCC: FourCC = buffer.toString("binary", i, i + 4);
+    if (fourCC.length !== 4) {
+        throw new Error("Buffer does not contain enough bytes to read FourCC at index: " + i);
+    }
+    return fourCC;
+}
+
+/**
  * The header fields of a box structure.
  */
 export interface BoxHeader {
