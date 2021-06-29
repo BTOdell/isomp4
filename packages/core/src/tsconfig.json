@@ -1,8 +1,7 @@
 {
   "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
-    "outDir": "../dist",
-    "module": "ES2015"
+    "outDir": "../dist"
   },
   "references": [
     { "path": "./tsconfig.cjs.json" }

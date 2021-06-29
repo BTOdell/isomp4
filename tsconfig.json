@@ -1,6 +1,7 @@
 {
   "files": [],
   "references": [
+    { "path": "boxes" },
     { "path": "packages" }
   ]
 }
