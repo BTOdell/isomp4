@@ -50,10 +50,14 @@ export abstract class AbstractMP4Parser {
     private bytesNeeded: number;
 
     /**
-     * The header of the current box.
+     * The current box state.
      * If this is <code>null</code>, then a box header will be parsed next.
      */
-    private boxHeader: BoxHeader | null;
+    private currentBox: {
+        readonly header: BoxHeader,
+        content: boolean,
+        children: boolean,
+    } | null;
 
     /**
      * Creates a new parser for an MP4 stream.
@@ -63,7 +67,7 @@ export abstract class AbstractMP4Parser {
         this.boxStack = [];
         this.buffer = EMPTY_BUFFER;
         this.bytesNeeded = 0;
-        this.boxHeader = null;
+        this.currentBox = null;
     }
 
     /**
@@ -114,7 +118,7 @@ export abstract class AbstractMP4Parser {
                 const bytesNeeded = this.bytesNeeded;
                 const buf = Buffer.from(this.buffer.buffer, 0, bytesNeeded);
                 this.bytesNeeded = 0; // This must be reset before calling processBuffer()
-                const bytesConsumed: number = this.processBuffer(buf).byteOffset;
+                const bytesConsumed: number = this.processBuffer(buf);
                 if (bytesConsumed !== bytesNeeded) {
                     throw new Error(`bytes consumed(${bytesConsumed}) != bytes needed(${bytesNeeded})`);
                 }
@@ -125,7 +129,10 @@ export abstract class AbstractMP4Parser {
                 this.buffer = Buffer.from(this.buffer.buffer);
             } else {
                 // Avoid copying data by using the input buffer directly
-                input = this.processBuffer(input);
+                const consumed: number = this.processBuffer(input);
+                if (consumed > 0) {
+                    input = input.slice(consumed);
+                }
             }
         }
     }
@@ -145,54 +152,64 @@ export abstract class AbstractMP4Parser {
     /**
      * Processes the given buffer.
      * @param buffer The input buffer.
-     * @return A buffer with consumed bytes being sliced off.
+     * @return The number of bytes consumed.
      */
-    private processBuffer(buffer: Buffer): Buffer {
-        while (buffer.length > 0) {
-            let consumed: number;
-            if (this.boxHeader == null) {
-                const header: BoxHeader | number = parseBoxHeader(buffer);
-                if (typeof header === "number") {
-                    this.bytesNeeded = header;
-                    break;
-                }
-                this.boxHeader = header;
-                // Invoke box started event
-                this.onBoxStarted(this.boxHeader, buffer.slice(0, header.headerLength));
-                consumed = header.headerLength;
-            } else {
-                if (this.boxStack.length > 0) {
-                    const top: BoxState = this.boxStack[this.boxStack.length - 1];
-                    if (top.box == null) {
-                        // TODO
-                    }
-                }
-                const encoding: BoxEncoding | undefined = this.boxes.get(this.boxHeader.type);
-                if (encoding == null) {
-                    // TODO no encoding for box type, must skip entire box and children (use size)
-                    this.boxStack.push({
-                        header: this.boxHeader,
-                        box: null,
-                        offset: this.boxHeader.headerLength,
-                    });
-                    continue;
-                }
-                const box = encoding.decodeWithHeader(this.boxHeader, buffer);
+    private processBuffer(buffer: Buffer): number {
+        if (this.currentBox == null) {
+            const header: BoxHeader | number = parseBoxHeader(buffer);
+            if (typeof header === "number") {
+                this.bytesNeeded = header;
+                return 0;
+            }
+            this.currentBox = {
+                header,
+                content: false,
+                children: false,
+            };
+            // Invoke box started event
+            this.currentBox.content = this.onBoxStarted(header, buffer.slice(0, header.headerLength));
+            return header.headerLength;
+        }
+        const header: BoxHeader = this.currentBox.header;
+        if (this.boxStack.length > 0) {
+            const top: BoxState = this.boxStack[this.boxStack.length - 1];
+            if (top.box == null) {
+                // Box children should not be parsed, just pass through data
+                // TODO
+            }
+        }
+        if (this.currentBox.content) {
+            const encoding: BoxEncoding | undefined = this.boxes.get(header.type);
+            if (encoding != null) {
+                const box = encoding.decodeWithHeader(header, buffer);
                 if (typeof box === "number") {
                     this.bytesNeeded = box;
-                    break;
+                    return 0;
                 }
-                consumed = box.length - box.headerLength;
+                const consumed = box.length - box.headerLength;
+                // Invoke box decoded event
+                this.currentBox.children = this.onBoxDecoded(box, buffer.slice(0, consumed));
+                // Push box onto stack (and record whether to parse children)
                 this.boxStack.push({
-                    header: this.boxHeader,
+                    header: header,
                     box: box,
                     offset: consumed,
                 });
-                this.boxHeader = null;
+                // Trigger parsing of child boxes
+                this.currentBox = null;
+                return consumed;
             }
-            buffer = buffer.slice(consumed);
+            // No encoding, so reset content boolean
+            this.currentBox.content = false;
         }
-        return buffer;
+        // TODO no encoding for box type, must skip entire box and children (use size)
+        this.boxStack.push({
+            header: header,
+            box: null,
+            offset: header.headerLength,
+        });
+        // TODO
+        return 0;
     }
 
     /**
@@ -205,7 +222,8 @@ export abstract class AbstractMP4Parser {
 
     /**
      * Invoked when the box content is parsed.
-     * This will be invoked if {@link onBoxStarted} returns <code>true</code> for a box,
+     * This will be invoked if {@link onBoxStarted} returns <code>true</code> for a box
+     * and there is a registered box encoding for the box type,
      * otherwise {@link onBoxData} will be invoked with the remaining box data.
      * @param box The box that was parsed.
      * @param boxData The raw content data of the box (excluding header and children).
