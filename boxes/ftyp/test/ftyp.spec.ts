@@ -49,9 +49,8 @@ function checkGoodData(data: Buffer) {
         return;
     }
     expect(result.size).eq(32);
-    expect(result.size).eq(result.length); // no children
+    expect(result.size).eq(ftyp.decodedBytes); // no children
     expect(result.type).eq("ftyp");
-    expect(result.headerLength).eq(8); // compact
     expect(result.majorBrand).eq("mp42");
     expect(result.minorVersion).eq(0);
     expect(result.compatibleBrands.length).eq(4);

@@ -17,7 +17,7 @@ export const mdat: BoxEncoding<MediaDataBox> = new class extends AbstractBoxEnco
         return 0;
     }
 
-    public override decodeWithHeader(header: BoxHeader, buffer: Buffer): MediaDataBox | number {
+    public override decodeWithHeader(buffer: Buffer, header: BoxHeader): MediaDataBox | number {
         return 0;
     }
 

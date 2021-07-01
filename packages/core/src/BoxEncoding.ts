@@ -1,9 +1,9 @@
 import {Buffer} from "buffer";
-import type {Box, BoxHeader, FourCC} from "./Box.js";
-import {parseBoxHeader} from "./Box.js";
+import type {Box, FourCC} from "./Box.js";
+import {BoxHeader} from "./Box.js";
 
 /**
- *
+ * A factory interface for encoding and decoding boxes.
  */
 export interface BoxEncoding<B extends Box = Box> {
 
@@ -49,16 +49,19 @@ export interface BoxEncoding<B extends Box = Box> {
      * @param buffer The buffer to read from (starting at offset 0).
      * @return A parsed box object,
      * or if there isn't enough data in the buffer, returns the total
-     * number of bytes needed to decode the box.
+     * number of bytes needed to decode the box (excluding the children).
      */
     decode(buffer: Buffer): B | number;
 
     /**
-     *
-     * @param header
-     * @param buffer
+     * Decodes the given buffer into a box object using the pre-parsed box header.
+     * @param buffer The buffer to read from (starting at offset 0).
+     * @param header A pre-parsed box header.
+     * @return A parsed box object,
+     * or if there isn't enough data in the buffer, returns the total
+     * number of bytes needed to decode the box (excluding the header and children).
      */
-    decodeWithHeader(header: BoxHeader, buffer: Buffer): B | number;
+    decodeWithHeader(buffer: Buffer, header: BoxHeader): B | number;
 
 }
 
@@ -104,17 +107,19 @@ export abstract class AbstractBoxEncoding<B extends Box = Box> implements BoxEnc
     public abstract encodeTo(obj: B, buffer: Buffer): number;
 
     public decode(buffer: Buffer): B | number {
-        const parsedHeader = parseBoxHeader(buffer);
+        const parsedHeader = BoxHeader.parse(buffer);
         if (typeof parsedHeader === "number") {
             return parsedHeader;
         }
-        const parsedBox = this.decodeWithHeader(parsedHeader, buffer.slice(parsedHeader.headerLength));
+        const headerLength: number = BoxHeader.decodedBytes;
+        const parsedBox = this.decodeWithHeader(buffer.slice(headerLength), parsedHeader);
         if (typeof parsedBox === "number") {
-            return parsedHeader.headerLength + parsedBox;
+            return headerLength + parsedBox;
         }
+        this.decodedBytes += headerLength;
         return parsedBox;
     }
 
-    public abstract decodeWithHeader(header: BoxHeader, buffer: Buffer): B | number;
+    public abstract decodeWithHeader(buffer: Buffer, header: BoxHeader): B | number;
 
 }

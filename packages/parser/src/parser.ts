@@ -1,6 +1,6 @@
 import {Buffer} from "buffer";
-import type {Box, BoxEncoding, BoxHeader, FourCC} from "@isomp4/core";
-import {parseBoxHeader} from "@isomp4/core";
+import type {Box, BoxEncoding, FourCC} from "@isomp4/core";
+import {BoxHeader} from "@isomp4/core";
 
 const EMPTY_BUFFER = Buffer.allocUnsafe(0);
 
@@ -60,6 +60,7 @@ export abstract class AbstractMP4Parser {
      */
     private currentBox: {
         readonly header: BoxHeader,
+        readonly headerLength: number,
         content: boolean,
     } | null;
 
@@ -160,20 +161,21 @@ export abstract class AbstractMP4Parser {
      */
     private processBuffer(buffer: Buffer): number {
         if (this.currentBox == null) {
-            const header: BoxHeader | number = parseBoxHeader(buffer);
+            const header: BoxHeader | number = BoxHeader.parse(buffer);
             if (typeof header === "number") {
                 this.bytesNeeded = header;
                 return 0;
             }
-            const consumed = header.headerLength;
+            const headerLength = BoxHeader.decodedBytes;
             // Invoke box started event
-            const content = this.onBoxStarted(header, buffer.slice(0, consumed));
+            const content = this.onBoxStarted(header, buffer.slice(0, headerLength));
             // Start box
             this.currentBox = {
                 header,
+                headerLength,
                 content,
             };
-            return consumed;
+            return headerLength;
         }
         const header: BoxHeader = this.currentBox.header;
         if (this.boxStack.length > 0) {
@@ -186,12 +188,12 @@ export abstract class AbstractMP4Parser {
         if (this.currentBox.content) {
             const encoding: BoxEncoding | undefined = this.boxes.get(header.type);
             if (encoding != null) {
-                const box = encoding.decodeWithHeader(header, buffer);
+                const box = encoding.decodeWithHeader(buffer, header);
                 if (typeof box === "number") {
                     this.bytesNeeded = box;
                     return 0;
                 }
-                const consumed = box.length - box.headerLength;
+                const consumed = encoding.decodedBytes;
                 // Invoke box decoded event
                 const children = this.onBoxDecoded(box, buffer.slice(0, consumed));
                 // Push box onto stack (and record whether to parse children)
@@ -215,7 +217,7 @@ export abstract class AbstractMP4Parser {
             header,
             box: null,
             children: false,
-            offset: header.headerLength,
+            offset: this.currentBox.headerLength,
         });
         // TODO
         return 0;

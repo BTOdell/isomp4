@@ -1,6 +1,6 @@
 import type {Buffer} from "buffer";
-import type {Box, BoxEncoding, BoxHeader, FourCC} from "@isomp4/core";
-import {AbstractBoxEncoding, readFourCC} from "@isomp4/core";
+import type {Box, BoxEncoding, FourCC} from "@isomp4/core";
+import {AbstractBoxEncoding, BoxHeader, readFourCC} from "@isomp4/core";
 
 export interface FileTypeBox extends Box {
     readonly majorBrand: FourCC;
@@ -17,11 +17,12 @@ export const ftyp: BoxEncoding<FileTypeBox> = new class extends AbstractBoxEncod
     }
 
     public override encodeTo(obj: FileTypeBox, buffer: Buffer): number {
+        // TODO
         throw "implement";
     }
 
-    public override decodeWithHeader(header: BoxHeader, buffer: Buffer): FileTypeBox | number {
-        const contentLength: number = header.size - header.headerLength;
+    public override decodeWithHeader(buffer: Buffer, header: BoxHeader): FileTypeBox | number {
+        const contentLength: number = header.size - BoxHeader.encodingLength(header);
         if (buffer.length < contentLength) {
             return contentLength;
         }
@@ -31,9 +32,9 @@ export const ftyp: BoxEncoding<FileTypeBox> = new class extends AbstractBoxEncod
         for (let i = 8; i < contentLength; i += 4) {
             compatibleBrands.push(readFourCC(buffer, i));
         }
+        this.decodedBytes = contentLength;
         return {
             ...header,
-            length: header.size, // ftyp has no children
             majorBrand,
             minorVersion,
             compatibleBrands,

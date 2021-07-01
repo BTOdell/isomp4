@@ -17,8 +17,9 @@ export const moof: BoxEncoding<MovieBox> = new class extends AbstractBoxEncoding
         return 0;
     }
 
-    public override decodeWithHeader(header: BoxHeader, buffer: Buffer): MovieBox | number {
-        return 0;
+    public override decodeWithHeader(buffer: Buffer, header: BoxHeader): MovieBox | number {
+        this.decodedBytes = 0;
+        return header;
     }
 
 }();

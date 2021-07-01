@@ -14,10 +14,11 @@ export const moof: BoxEncoding<MovieFragmentBox> = new class extends AbstractBox
     }
 
     public override encodeTo(obj: MovieFragmentBox, buf: Buffer): number {
-        return 0;
+        // TODO
+        throw "implement";
     }
 
-    public override decodeWithHeader(header: BoxHeader, buffer: Buffer): MovieFragmentBox | number {
+    public override decodeWithHeader(buffer: Buffer, header: BoxHeader): MovieFragmentBox | number {
         return 0;
     }
 
