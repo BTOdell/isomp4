@@ -1,5 +1,6 @@
 import {Buffer} from "buffer";
 import {expect} from "chai";
+import type {FileTypeBox} from "@isomp4/box-ftyp";
 import {ftyp} from "@isomp4/box-ftyp";
 
 /* eslint-disable array-element-newline */
@@ -83,5 +84,23 @@ describe("ftyp", () => {
     });
     it("should not parse extra data (36 bytes)", () => {
         checkGoodData(moreData);
+    });
+    it("should calculate encoding length", () => {
+        const box: FileTypeBox = {
+            size: 0,
+            type: "ftyp",
+            majorBrand: "mp42",
+            minorVersion: 0,
+            compatibleBrands: [],
+        };
+        expect(ftyp.encodingLength(box)).eq(16);
+        const box2: FileTypeBox = {
+            size: 0,
+            type: "ftyp",
+            majorBrand: "mp42",
+            minorVersion: 0,
+            compatibleBrands: ["isom", "iso2", "avc1", "mp41"],
+        };
+        expect(ftyp.encodingLength(box2)).eq(32);
     });
 });

@@ -188,7 +188,7 @@ export abstract class AbstractMP4Parser {
         if (this.currentBox.content) {
             const encoding: BoxEncoding | undefined = this.boxes.get(header.type);
             if (encoding != null) {
-                const box = encoding.decodeWithHeader(buffer, header);
+                const box = encoding.decode(buffer, header);
                 if (typeof box === "number") {
                     this.bytesNeeded = box;
                     return 0;

@@ -1,11 +1,11 @@
 import type {Buffer} from "buffer";
-import type {Box, BoxEncoding, BoxHeader, FourCC} from "@isomp4/core";
-import {AbstractBoxEncoding} from "@isomp4/core";
+import type {Box, BoxHeader, FourCC} from "@isomp4/core";
+import {BoxEncoding} from "@isomp4/core";
 
 export interface MediaDataBox extends Box {
 }
 
-export const mdat: BoxEncoding<MediaDataBox> = new class extends AbstractBoxEncoding<MediaDataBox> {
+class MediaDataBoxEncoding extends BoxEncoding {
 
     public override readonly type: FourCC = "mdat";
 
@@ -17,8 +17,10 @@ export const mdat: BoxEncoding<MediaDataBox> = new class extends AbstractBoxEnco
         return 0;
     }
 
-    public override decodeWithHeader(buffer: Buffer, header: BoxHeader): MediaDataBox | number {
+    public override decode(buffer: Buffer, header?: BoxHeader): MediaDataBox | number {
         return 0;
     }
 
-}();
+}
+
+export const mdat = new MediaDataBoxEncoding();

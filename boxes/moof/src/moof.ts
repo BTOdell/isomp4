@@ -1,11 +1,11 @@
 import type {Buffer} from "buffer";
-import type {Box, BoxEncoding, BoxHeader, FourCC} from "@isomp4/core";
-import {AbstractBoxEncoding} from "@isomp4/core";
+import type {Box, BoxHeader, FourCC} from "@isomp4/core";
+import {BoxEncoding} from "@isomp4/core";
 
 export interface MovieFragmentBox extends Box {
 }
 
-export const moof: BoxEncoding<MovieFragmentBox> = new class extends AbstractBoxEncoding<MovieFragmentBox> {
+class MovieFragmentBoxEncoding extends BoxEncoding {
 
     public override readonly type: FourCC = "moof";
 
@@ -18,8 +18,10 @@ export const moof: BoxEncoding<MovieFragmentBox> = new class extends AbstractBox
         throw "implement";
     }
 
-    public override decodeWithHeader(buffer: Buffer, header: BoxHeader): MovieFragmentBox | number {
+    public override decode(buffer: Buffer, header?: BoxHeader): MovieFragmentBox | number {
         return 0;
     }
 
-}();
+}
+
+export const moof = new MovieFragmentBoxEncoding();

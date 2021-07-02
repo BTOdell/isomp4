@@ -22,7 +22,7 @@ export function readFourCC(buffer: Buffer, i: number): FourCC {
 /**
  * The length (in bytes) of a compact box header in the ISO base media file format.
  * This header includes the 32-bit unsigned `size` field and the 32-bit unsigned `type` field.
- * @see ISO/IEC 14496-12.
+ * @see ISO/IEC 14496-12:2015.
  */
 const BOX_HEADER_LENGTH: number = 8;
 
@@ -134,6 +134,13 @@ export namespace BoxHeader {
 export interface Box extends BoxHeader {}
 
 /**
+ * The length (in bytes) of a full box header in the ISO base media file format.
+ * This header includes the 8-bit unsigned `version` field and the 24-bit `flags` field.
+ * @see ISO/IEC 14496-12:2015.
+ */
+const FULL_BOX_HEADER_LENGTH: number = 4;
+
+/**
  * The header fields of a full box structure.
  */
 export interface FullBoxHeader {
@@ -156,6 +163,15 @@ export namespace FullBoxHeader {
      * The number of bytes that were decoded by the last call to {@link FullBoxHeader#parse}.
      */
     export let decodedBytes: number;
+
+    /**
+     * Calculates the length (in bytes) of the given full box header object.
+     * @param header The full box header object.
+     * @return The number of bytes that are required to encode the given header.
+     */
+    export function encodingLength(header: FullBoxHeader): number {
+        return FULL_BOX_HEADER_LENGTH;
+    }
 
     /**
      * Parses the given buffer into a full box header object.
