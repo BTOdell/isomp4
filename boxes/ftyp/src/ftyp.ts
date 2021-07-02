@@ -1,6 +1,6 @@
 import type {Buffer} from "buffer";
-import type {Box, FourCC} from "@isomp4/core";
-import {BoxEncoding, BoxHeader, readFourCC} from "@isomp4/core";
+import type {Box, FourCC, BoxHeader} from "@isomp4/core";
+import {BoxEncoding, readFourCC} from "@isomp4/core";
 
 export interface FileTypeBox extends Box {
     readonly majorBrand: FourCC;
