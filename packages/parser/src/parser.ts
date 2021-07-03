@@ -124,11 +124,12 @@ export abstract class AbstractMP4Parser {
                 const buf = Buffer.from(this.buffer.buffer, 0, bytesNeeded);
                 this.bytesNeeded = 0; // This must be reset before calling processBuffer()
                 const bytesConsumed: number = this.processBuffer(buf);
+                if (this.bytesNeeded > 0) {
+                    // More bytes are needed
+                    continue;
+                }
                 if (bytesConsumed !== bytesNeeded) {
                     throw new Error(`bytes consumed(${bytesConsumed}) != bytes needed(${bytesNeeded})`);
-                }
-                if (this.bytesNeeded > 0) {
-                    throw new Error("bytes needed was set");
                 }
                 // Reset buffer
                 this.buffer = Buffer.from(this.buffer.buffer);
