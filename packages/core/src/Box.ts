@@ -197,8 +197,35 @@ export namespace FullBoxHeader {
 
 export interface FullBox extends Box, FullBoxHeader {}
 
-export interface BoxContainer {
+export interface BoxContainer extends Box {
     children: {
-        [type: string]: Box | Box[],
+        [type: string]: Box[],
     };
+}
+
+export namespace BoxContainer {
+
+    /**
+     * Determines if the given object is a box container.
+     * @param box The given object to test.
+     * @return Whether its a valid box container.
+     */
+    export function isInstance(box: any): box is BoxContainer {
+        return typeof box === "object" && box !== null && "children" in box &&
+            typeof box.children === "object" && box.children !== null;
+    }
+
+    /**
+     * Adds the child to the given box container.
+     * @param parent The box container parent to add to.
+     * @param child The child box to add to the container parent.
+     */
+    export function add(parent: BoxContainer, child: Box): void {
+        if (Object.prototype.hasOwnProperty.call(parent.children, child.type)) {
+            parent.children[child.type].push(child);
+        } else {
+            parent.children[child.type] = [child];
+        }
+    }
+
 }

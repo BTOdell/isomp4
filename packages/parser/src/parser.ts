@@ -1,6 +1,6 @@
 import {Buffer} from "buffer";
 import type {Box, BoxEncoding, FourCC} from "@isomp4/core";
-import {BoxHeader} from "@isomp4/core";
+import {BoxContainer, BoxHeader} from "@isomp4/core";
 
 const EMPTY_BUFFER = Buffer.allocUnsafe(0);
 
@@ -203,6 +203,14 @@ export abstract class AbstractMP4Parser {
                 }
                 // Pop box state
                 this.boxStack.pop();
+                // Check next box state
+                if (this.boxStack.length > 0) {
+                    const next = this.boxStack[this.boxStack.length - 1];
+                    next.offset += header.size;
+                    if (top.box != null && next.box != null && BoxContainer.isInstance(next.box)) {
+                        BoxContainer.add(next.box, top.box);
+                    }
+                }
                 // Trigger parsing of next box
                 this.currentBox = null;
                 return needed;
@@ -230,6 +238,7 @@ export abstract class AbstractMP4Parser {
                 });
                 // Trigger parsing of child boxes
                 if (children) {
+                    (box as BoxContainer).children = {};
                     this.currentBox = null;
                 }
                 return consumed;
