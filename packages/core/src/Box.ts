@@ -206,13 +206,13 @@ export interface BoxContainer extends Box {
 export namespace BoxContainer {
 
     /**
-     * Determines if the given object is a box container.
-     * @param box The given object to test.
+     * Determines if the given box is a container.
+     * @param box The given box to test.
      * @return Whether its a valid box container.
      */
-    export function isInstance(box: any): box is BoxContainer {
+    export function isInstance(box: Box): box is BoxContainer {
         return typeof box === "object" && box !== null && "children" in box &&
-            typeof box.children === "object" && box.children !== null;
+            typeof (box as any).children === "object" && (box as any).children !== null;
     }
 
     /**
