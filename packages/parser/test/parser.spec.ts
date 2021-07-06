@@ -2,7 +2,8 @@ import {expect} from "chai";
 import {readFileSync} from "fs";
 import {dirname, join} from "path";
 import {fileURLToPath} from "url";
-import type {BoxHeader} from "@isomp4/core";
+import {moov} from "@isomp4/box-moov";
+import type {Box, BoxHeader} from "@isomp4/core";
 import {MP4Parser} from "@isomp4/parser";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -17,9 +18,14 @@ const fragmentedVideo = read("fragmented.mp4");
 describe("parser", () => {
     it("should parse all at once", () => {
         const parser = new MP4Parser();
+        parser.registerBox(moov);
 
         parser.boxStarted = (header: BoxHeader) => {
             console.log("started:", header.type);
+            return true;
+        };
+        parser.boxDecoded = (box: Box) => {
+            console.log("decoded:", box.type);
             return true;
         };
         parser.boxEnded = (header: BoxHeader) => {
