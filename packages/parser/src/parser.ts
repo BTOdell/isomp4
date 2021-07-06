@@ -178,14 +178,38 @@ export abstract class AbstractMP4Parser {
             };
             return headerLength;
         }
-        const header: BoxHeader = this.currentBox.header;
         if (this.boxStack.length > 0) {
             const top: BoxState = this.boxStack[this.boxStack.length - 1];
             if (!top.children) {
+                const header = top.header;
                 // Box children should not be parsed, just pass through data
-                // TODO
+                const needed: number = header.size - top.offset;
+                if (needed > 0) {
+                    const available: number = buffer.length;
+                    if (needed > available) {
+                        // Don't have enough data
+                        this.onBoxData(header, buffer);
+                        top.offset += available;
+                        return available;
+                    }
+                    // Have enough data
+                    this.onBoxData(header, buffer.slice(0, needed));
+                }
+                // End box
+                if (top.box != null) {
+                    this.onBoxEnded(header, top.box);
+                } else {
+                    this.onBoxEnded(header);
+                }
+                // Pop box state
+                this.boxStack.pop();
+                // Trigger parsing of next box
+                this.currentBox = null;
+                return needed;
             }
+            // TODO need to check 'needed' bytes of boxes without children = false
         }
+        const header: BoxHeader = this.currentBox.header;
         if (this.currentBox.content) {
             const encoding: BoxEncoding | undefined = this.boxes.get(header.type);
             if (encoding != null) {
@@ -213,15 +237,14 @@ export abstract class AbstractMP4Parser {
             // No encoding, so reset content boolean
             this.currentBox.content = false;
         }
-        // TODO no encoding for box type, must skip entire box and children (use size)
+        // No encoding for box type, must skip entire box and children (use size)
         this.boxStack.push({
             header,
             box: null,
             children: false,
             offset: this.currentBox.headerLength,
         });
-        // TODO
-        return 0;
+        return this.processBuffer(buffer);
     }
 
     /**
@@ -269,6 +292,13 @@ export class MP4Parser extends AbstractMP4Parser {
     public boxDecoded?: typeof MP4Parser.prototype.onBoxDecoded;
     public boxData?: typeof MP4Parser.prototype.onBoxData;
     public boxEnded?: typeof MP4Parser.prototype.onBoxEnded;
+
+    /**
+     * Create a new MP4Parser.
+     */
+    constructor() {
+        super();
+    }
 
     protected onBoxStarted(header: BoxHeader, headerData: Buffer): boolean {
         return this.boxStarted ? this.boxStarted(header, headerData) : false;

@@ -4,6 +4,6 @@
     "composite": false,
     "declaration": false,
     "allowSyntheticDefaultImports": true,
-    "types": ["mocha", "chai"]
+    "types": ["node", "mocha", "chai"]
   }
 }
