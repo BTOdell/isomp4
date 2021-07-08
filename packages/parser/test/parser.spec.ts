@@ -1,14 +1,11 @@
 import {Buffer} from "buffer";
 import {expect} from "chai";
 import {readFileSync} from "fs";
-import {dirname, join} from "path";
-import {fileURLToPath} from "url";
+import {join} from "path";
 import {moov} from "@isomp4/box-moov";
 import type {Box, BoxHeader} from "@isomp4/core";
 import {MP4Parser} from "@isomp4/parser";
 import {BoxContainer} from "@isomp4/core";
-
-const __dirname = dirname(fileURLToPath(import.meta.url));
 
 function read(relativePath: string): Buffer {
     return readFileSync(join(__dirname, relativePath));

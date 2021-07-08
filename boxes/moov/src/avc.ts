@@ -1,8 +1,8 @@
 import {Buffer} from "buffer";
 import type {Box, BoxHeader, FourCC} from "@isomp4/core";
 import {BoxEncoding} from "@isomp4/core";
-import type {VisualSampleEntry} from "./SampleEntry";
-import {VisualSampleEntryEncoding} from "./SampleEntry";
+import type {VisualSampleEntry} from "./SampleEntry.js";
+import {VisualSampleEntryEncoding} from "./SampleEntry.js";
 
 export interface AVC1Box extends VisualSampleEntry {
 }
@@ -35,7 +35,7 @@ export interface AVCConfigurationBox extends Box {
 }
 
 function readParameterSets(buffer: Buffer, offset: number, countMask: number): Buffer[] | number {
-    if (buffer.length <= offset) {
+    if (buffer.length < offset + 1) {
         return offset + 1;
     }
     const parameterSets: Buffer[] = [];
@@ -107,22 +107,26 @@ class AVCCEncoding extends BoxEncoding {
         let bitDepthLumaMinus8: number | undefined;
         let bitDepthChromaMinus8: number | undefined;
         let sequenceParameterSetsExt: Buffer[] | undefined;
-        if (profileIndication === 100 || // high
-            profileIndication === 110 || // high 10
-            profileIndication === 122 || // high 4:2:2
-            profileIndication === 144) { // unknown
-            if (buffer.length < offset + 3) {
-                return offset + 3;
+        switch (profileIndication) {
+            case 100: // high
+            case 110: // high 10
+            case 122: // high 4:2:2
+            case 144: // unknown
+            {
+                if (buffer.length < offset + 3) {
+                    return offset + 3;
+                }
+                chromaFormat = buffer.readUInt8(offset++) & 0b11;
+                bitDepthLumaMinus8 = buffer.readUInt8(offset++) & 0b111;
+                bitDepthChromaMinus8 = buffer.readUInt8(offset++) & 0b111;
+                const _sequenceParameterSetsExt = readParameterSets(buffer, offset, 0b11111111);
+                if (typeof _sequenceParameterSetsExt === "number") {
+                    return _sequenceParameterSetsExt;
+                }
+                sequenceParameterSetsExt = _sequenceParameterSetsExt;
+                offset = readParameterSets.offset;
+                break;
             }
-            chromaFormat = buffer.readUInt8(offset++) & 0b11;
-            bitDepthLumaMinus8 = buffer.readUInt8(offset++) & 0b111;
-            bitDepthChromaMinus8 = buffer.readUInt8(offset++) & 0b111;
-            const _sequenceParameterSetsExt = readParameterSets(buffer, offset, 0b11111111);
-            if (typeof _sequenceParameterSetsExt === "number") {
-                return _sequenceParameterSetsExt;
-            }
-            sequenceParameterSetsExt = _sequenceParameterSetsExt;
-            offset = readParameterSets.offset;
         }
         this.decodedBytes = offset;
         return {
