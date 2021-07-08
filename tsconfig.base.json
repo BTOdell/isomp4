@@ -9,6 +9,7 @@
     "lib": [
       "ES2020"
     ],
+    "types": [],
     "forceConsistentCasingInFileNames": true,
     "sourceMap": true,
     "strict": true,
