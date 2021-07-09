@@ -33,6 +33,12 @@
     }
   },
   "types": "./dist/ftyp.d.ts",
+  "files": [
+    "cjs/**/*.js",
+    "cjs/**/package.json",
+    "dist/**/*.js",
+    "dist/**/*.d.ts"
+  ],
   "dependencies": {
     "@isomp4/core": "file:../../packages/core",
     "buffer": "^6.0.0"

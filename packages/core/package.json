@@ -34,6 +34,12 @@
     }
   },
   "types": "./dist/core.d.ts",
+  "files": [
+    "cjs/**/*.js",
+    "cjs/**/package.json",
+    "dist/**/*.js",
+    "dist/**/*.d.ts"
+  ],
   "dependencies": {
     "buffer": "^6.0.0"
   },
