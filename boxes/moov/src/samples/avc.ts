@@ -4,21 +4,6 @@ import {BoxEncoding} from "@isomp4/core";
 import type {VisualSampleEntry} from "./SampleEntry.js";
 import {VisualSampleEntryEncoding} from "./SampleEntry.js";
 
-export interface AVC1Box extends VisualSampleEntry {
-}
-
-class AVC1Encoding extends VisualSampleEntryEncoding {
-
-    public override readonly type: FourCC = "avc1";
-
-    public override decode(buffer: Buffer, header?: BoxHeader): AVC1Box | number {
-        return super.decode(buffer, header);
-    }
-
-}
-
-export const avc1 = new AVC1Encoding();
-
 export interface AVCConfigurationBox extends Box {
     configurationVersion: number;
     profileIndication: number;
@@ -32,6 +17,16 @@ export interface AVCConfigurationBox extends Box {
     bitDepthLumaMinus8?: number;
     bitDepthChromaMinus8?: number;
     sequenceParameterSetsExt?: Buffer[];
+}
+
+function toHexByte(value: number): string {
+    return value.toString(16).padStart(2, "0");
+}
+
+export function getAVCCodec(avcC: AVCConfigurationBox): string {
+    return toHexByte(avcC.profileIndication) +
+        toHexByte(avcC.profileCompatibility) +
+        toHexByte(avcC.levelIndication);
 }
 
 function readParameterSets(buffer: Buffer, offset: number, countMask: number): Buffer[] | number {
@@ -148,4 +143,40 @@ class AVCCEncoding extends BoxEncoding {
 
 }
 
-export const avcC = new AVCCEncoding();
+const avcC = new AVCCEncoding();
+
+export interface AVCBox extends VisualSampleEntry {
+    config: AVCConfigurationBox;
+}
+
+class AVCEncoding extends VisualSampleEntryEncoding {
+
+    public override readonly type: FourCC;
+
+    constructor(type: string) {
+        super();
+        this.type = type;
+    }
+
+    public override decode(buffer: Buffer, header?: BoxHeader): AVCBox | number {
+        const superBox = super.decode(buffer, header);
+        if (typeof superBox === "number") {
+            return superBox;
+        }
+        const config = avcC.decode(buffer.slice(this.decodedBytes));
+        if (typeof config === "number") {
+            return this.decodedBytes + config;
+        }
+        this.decodedBytes += avcC.decodedBytes;
+        return {
+            ...superBox,
+            config,
+        };
+    }
+
+}
+
+export const avc1 = new AVCEncoding("avc1");
+export const avc2 = new AVCEncoding("avc2");
+export const avc3 = new AVCEncoding("avc3");
+export const avc4 = new AVCEncoding("avc4");

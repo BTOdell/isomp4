@@ -6,7 +6,6 @@ export const mdia = new BoxContainerEncoding("mdia");
 export const minf = new BoxContainerEncoding("minf");
 export const stbl = new BoxContainerEncoding("stbl");
 
-export * from "./avc.js";
 export * from "./mvhd.js";
-export * from "./SampleEntry.js";
+export * from "./samples/avc.js";
 export * from "./stsd.js";
