@@ -143,7 +143,7 @@ class AVCCEncoding extends BoxEncoding {
 
 }
 
-const avcC = new AVCCEncoding();
+export const avcC = new AVCCEncoding();
 
 export interface AVCBox extends VisualSampleEntry {
     config: AVCConfigurationBox;
