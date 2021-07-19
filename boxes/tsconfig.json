@@ -3,7 +3,6 @@
   "references": [
     { "path": "../packages/core/src" },
     { "path": "ftyp" },
-    { "path": "mdat" },
     { "path": "moof" },
     { "path": "moov" }
   ]
