@@ -40,8 +40,8 @@
     "dist/**/*.js",
     "dist/**/*.d.ts"
   ],
-  "dependencies": {
-    "buffer": "^6.0.0"
+  "peerDependencies": {
+    "buffer": ">=6.0.0"
   },
   "scripts": {
     "clean": "shx rm -rf ./dist ./cjs/**/*.js ./cjs/**/*.js.map ./cjs/**/*.d.ts ./test/**/*.js ./test/**/*.js.map ./test/**/*.d.ts ./**/*.tsbuildinfo"

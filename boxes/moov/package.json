@@ -39,7 +39,7 @@
     "dist/**/*.js",
     "dist/**/*.d.ts"
   ],
-  "dependencies": {
+  "peerDependencies": {
     "@isomp4/core": "file:../../packages/core"
   },
   "scripts": {
