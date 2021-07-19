@@ -1,6 +1,6 @@
 {
   "name": "isomp4",
-  "version": "0.0.1",
+  "version": "0.0.0-monorepo",
   "description": "A modern, flexible, and extensible parsing framework for ISO/IEC 14496-12 (MPEG-4 Part 12)",
   "keywords": [
     "iso",
