@@ -310,11 +310,11 @@ export class MP4Parser extends AbstractMP4Parser {
     }
 
     protected onBoxStarted(header: BoxHeader, headerData: Buffer): boolean {
-        return this.boxStarted ? this.boxStarted(header, headerData) : false;
+        return this.boxStarted ? this.boxStarted(header, headerData) : true;
     }
 
     protected onBoxDecoded(box: Box, boxData: Buffer): boolean {
-        return this.boxDecoded ? this.boxDecoded(box, boxData) : false;
+        return this.boxDecoded ? this.boxDecoded(box, boxData) : true;
     }
 
     protected onBoxData(header: BoxHeader, boxData: Buffer): void {
