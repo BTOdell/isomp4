@@ -35,8 +35,10 @@
   "types": "./dist/moov.d.ts",
   "files": [
     "cjs/**/*.js",
+    "cjs/**/*.js.map",
     "cjs/**/package.json",
     "dist/**/*.js",
+    "dist/**/*.js.map",
     "dist/**/*.d.ts"
   ],
   "dependencies": {
