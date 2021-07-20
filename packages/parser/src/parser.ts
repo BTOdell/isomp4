@@ -77,13 +77,15 @@ export abstract class AbstractMP4Parser {
 
     /**
      *
-     * @param encoding
+     * @param encodings
      */
-    public registerBox(encoding: BoxEncoding): void {
-        if (this.boxes.has(encoding.type)) {
-            throw new Error("Box type is already registered: " + encoding.type);
+    public registerBox(...encodings: BoxEncoding[]): void {
+        for (const encoding of encodings) {
+            if (this.boxes.has(encoding.type)) {
+                throw new Error("Box type is already registered: " + encoding.type);
+            }
+            this.boxes.set(encoding.type, encoding);
         }
-        this.boxes.set(encoding.type, encoding);
     }
 
     /**
