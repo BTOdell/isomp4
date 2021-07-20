@@ -1,6 +1,6 @@
 {
   "name": "@isomp4/box-moov",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "description": "Implements encoding and decoding of the moov box type",
   "keywords": [
     "iso",

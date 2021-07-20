@@ -1,6 +1,6 @@
 {
   "name": "@isomp4/box-ftyp",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "description": "Implements encoding and decoding of the ftyp box type",
   "keywords": [
     "iso",
