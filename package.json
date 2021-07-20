@@ -47,6 +47,7 @@
     "compile": "tsc -b",
     "pretest": "npm run compile",
     "test": "mocha",
+    "prepublishOnly": "npm run compile",
     "clean": "npm run clean --workspaces",
     "clean-nm": "npx shx rm -rf ./**/node_modules",
     "clean-all": "run-s -cs clean clean-nm"
