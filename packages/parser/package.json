@@ -43,6 +43,9 @@
   "dependencies": {
     "@isomp4/core": "file:../core"
   },
+  "devDependencies": {
+    "@isomp4/box-moov": "file:../../boxes/moov"
+  },
   "scripts": {
     "clean": "shx rm -rf ./dist ./cjs/**/*.js ./cjs/**/*.js.map ./cjs/**/*.d.ts ./test/**/*.js ./test/**/*.js.map ./test/**/*.d.ts ./**/*.tsbuildinfo"
   },

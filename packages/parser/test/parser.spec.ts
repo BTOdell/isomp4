@@ -2,7 +2,8 @@ import {Buffer} from "buffer";
 import {expect} from "chai";
 import {readFileSync} from "fs";
 import {join} from "path";
-import {moov} from "@isomp4/box-moov";
+import type {SampleDescriptionBox} from "@isomp4/box-moov";
+import {avc1, getVideoCodec, mdia, minf, moov, stbl, stsd, trak} from "@isomp4/box-moov";
 import type {Box, BoxHeader} from "@isomp4/core";
 import {MP4Parser} from "@isomp4/parser";
 import {BoxContainer} from "@isomp4/core";
@@ -99,5 +100,19 @@ describe("parser", () => {
     });
     it("should parse boxes (one byte at a time)", () => {
         parseFragmentedVideo(oneByteAtATime);
+    });
+    it("should extract the video codec", () => {
+        let videoCodec: string | undefined;
+
+        const parser = new MP4Parser();
+        parser.registerBox(moov, trak, mdia, minf, stbl, stsd, avc1);
+        parser.boxEnded = (header: BoxHeader, box?: Box) => {
+            if (box != null && box.type === "stsd") {
+                videoCodec = getVideoCodec(box as SampleDescriptionBox);
+            }
+        };
+        parser.append(fragmentedVideo);
+
+        expect(videoCodec).eq("avc1.4d0029");
     });
 });
