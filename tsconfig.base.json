@@ -11,7 +11,7 @@
     ],
     "types": [],
     "forceConsistentCasingInFileNames": true,
-    "sourceMap": true,
+    "sourceMap": false,
     "strict": true,
     "noImplicitAny": true,
     "noImplicitOverride": true,
