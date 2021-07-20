@@ -1,6 +1,6 @@
 {
   "name": "@isomp4/box-moof",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Implements encoding and decoding of the moof box type",
   "keywords": [
     "iso",
