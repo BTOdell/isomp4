@@ -1,10 +1,12 @@
-import {BoxContainerEncoding} from "@isomp4/core";
+import {BoxEncoding} from "@isomp4/core";
+import {mvhd} from "./mvhd.js";
+import {stsd} from "./stsd.js";
 
-export const moov = new BoxContainerEncoding("moov");
-export const trak = new BoxContainerEncoding("trak");
-export const mdia = new BoxContainerEncoding("mdia");
-export const minf = new BoxContainerEncoding("minf");
-export const stbl = new BoxContainerEncoding("stbl");
+export const stbl = new BoxEncoding("stbl", stsd);
+export const minf = new BoxEncoding("minf", stbl);
+export const mdia = new BoxEncoding("mdia", minf);
+export const trak = new BoxEncoding("trak", mdia);
+export const moov = new BoxEncoding("moov", mvhd, trak);
 
 export * from "./mvhd.js";
 export * from "./samples/avc.js";

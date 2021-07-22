@@ -1,5 +1,5 @@
 import type {Buffer} from "buffer";
-import type {Box, BoxHeader, FourCC} from "@isomp4/core";
+import type {Box, BoxHeader} from "@isomp4/core";
 import {BoxEncoding} from "@isomp4/core";
 
 export interface MovieFragmentBox extends Box {
@@ -7,7 +7,9 @@ export interface MovieFragmentBox extends Box {
 
 class MovieFragmentBoxEncoding extends BoxEncoding {
 
-    public override readonly type: FourCC = "moof";
+    constructor() {
+        super("moof");
+    }
 
     public override encodingLength(obj: MovieFragmentBox): number {
         return 0;

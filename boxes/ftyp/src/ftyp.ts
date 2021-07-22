@@ -10,7 +10,9 @@ export interface FileTypeBox extends Box {
 
 class FileTypeBoxEncoding extends BoxEncoding {
 
-    public override readonly type: FourCC = "ftyp";
+    constructor() {
+        super("ftyp");
+    }
 
     public override encodingLength(obj: FileTypeBox): number {
         return super.encodingLength(obj) +

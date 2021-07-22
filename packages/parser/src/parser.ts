@@ -76,16 +76,27 @@ export abstract class AbstractMP4Parser {
     }
 
     /**
-     *
-     * @param encodings
+     * Registers the given box encoding for the parser.
+     * @param encoding The encoding to register.
+     * @param children Whether to also register all child boxes of the given encoding. Default: false
      */
-    public registerBox(...encodings: BoxEncoding[]): void {
-        for (const encoding of encodings) {
-            if (this.boxes.has(encoding.type)) {
-                throw new Error("Box type is already registered: " + encoding.type);
-            }
-            this.boxes.set(encoding.type, encoding);
+    public registerBox(encoding: BoxEncoding, children?: boolean): void {
+        // Register encoding and all parent encodings
+        let parent: BoxEncoding | undefined = encoding;
+        do {
+            this.boxes.set(parent.type, parent);
+        } while ((parent = parent.parent) != null);
+        // Register child encodings
+        if (children) {
+            this.registerBoxChildren(encoding);
         }
+    }
+
+    private registerBoxChildren(encoding: BoxEncoding): void {
+        encoding.forEachChild(c => {
+            this.boxes.set(c.type, c);
+            this.registerBoxChildren(c);
+        });
     }
 
     /**

@@ -5,12 +5,30 @@ import {BoxHeader, FullBoxHeader} from "./Box.js";
 /**
  * A base factory for encoding and decoding boxes.
  */
-export abstract class BoxEncoding {
+export class BoxEncoding {
 
     /**
      * Unique box type.
      */
-    public abstract readonly type: FourCC;
+    public readonly type: FourCC;
+
+    private readonly _children: Map<FourCC, BoxEncoding> = new Map();
+
+    /**
+     * The encodings of this box's child boxes.
+     */
+    public get children(): readonly BoxEncoding[] {
+        return Array.from(this._children.values());
+    }
+
+    private _parent?: BoxEncoding;
+
+    /**
+     * The encoding of this box's parent box.
+     */
+    public get parent(): BoxEncoding | undefined {
+        return this._parent;
+    }
 
     private _decodedBytes: number = 0;
 
@@ -30,6 +48,41 @@ export abstract class BoxEncoding {
 
     protected set encodedBytes(value: number) {
         this._encodedBytes = value;
+    }
+
+    /**
+     * Creates a new encoding for a box.
+     * @param type The FourCC-type of the box.
+     * @param children The encodings of the child boxes.
+     */
+    constructor(type: FourCC, ...children: readonly BoxEncoding[]) {
+        this.type = type;
+        for (const childEncoding of children) {
+            if (childEncoding._parent != null) {
+                throw new Error("Child encoding '" + childEncoding.type + "' already has parent encoding: " + childEncoding._parent.type);
+            }
+            childEncoding._parent = this;
+            if (this._children.has(childEncoding.type)) {
+                throw new Error("Box encoding '" + this.type + "' already has child encoding: " + childEncoding.type);
+            }
+            this._children.set(childEncoding.type, childEncoding);
+        }
+    }
+
+    /**
+     * Gets the child encoding with the given type.
+     * @param type The FourCC type of the child box to get the encoding for.
+     */
+    public getChild(type: FourCC): BoxEncoding | undefined {
+        return this._children.get(type);
+    }
+
+    /**
+     * Executes the given callback with each child encoding.
+     * @param callback The callback function to invoke with each encoding.
+     */
+    public forEachChild(callback: (encoding: BoxEncoding) => void): void {
+        this._children.forEach(e => callback(e));
     }
 
     public encodingLength(obj: Box): number {
@@ -90,7 +143,7 @@ export abstract class BoxEncoding {
 /**
  * A partial encoding for full boxes.
  */
-export abstract class FullBoxEncoding extends BoxEncoding {
+export class FullBoxEncoding extends BoxEncoding {
 
     public override encodingLength(obj: FullBox): number {
         return super.encodingLength(obj) + FullBoxHeader.encodingLength(obj);
@@ -121,34 +174,6 @@ export abstract class FullBoxEncoding extends BoxEncoding {
             ...superBox,
             ...fullBoxHeader,
         };
-    }
-
-}
-
-/**
- * A default encoding for a box container (no fields in the box itself).
- */
-export class BoxContainerEncoding extends BoxEncoding {
-
-    public override readonly type: FourCC;
-
-    constructor(type: FourCC) {
-        super();
-        this.type = type;
-    }
-
-}
-
-/**
- * A default encoding for a full box container (no fields in the box itself).
- */
-export class FullBoxContainerEncoding extends FullBoxEncoding {
-
-    public override readonly type: FourCC;
-
-    constructor(type: FourCC) {
-        super();
-        this.type = type;
     }
 
 }

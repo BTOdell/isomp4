@@ -1,5 +1,5 @@
 import type {Buffer} from "buffer";
-import type {BoxHeader, FourCC, FullBox} from "@isomp4/core";
+import type {BoxHeader, FullBox} from "@isomp4/core";
 import {
     FullBoxEncoding,
     readDate,
@@ -23,7 +23,9 @@ export interface MovieHeaderBox extends FullBox {
 
 class MovieHeaderBoxEncoding extends FullBoxEncoding {
 
-    public override readonly type: FourCC = "mvhd";
+    constructor() {
+        super("mvhd");
+    }
 
     public override encodingLength(obj: MovieHeaderBox): number {
         return super.encodingLength(obj); // TODO implement

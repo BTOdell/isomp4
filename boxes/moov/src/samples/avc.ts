@@ -1,5 +1,5 @@
 import {Buffer} from "buffer";
-import type {Box, BoxHeader, FourCC} from "@isomp4/core";
+import type {Box, BoxHeader} from "@isomp4/core";
 import {BoxEncoding} from "@isomp4/core";
 import type {VisualSampleEntry} from "./SampleEntry.js";
 import {VisualSampleEntryEncoding} from "./SampleEntry.js";
@@ -56,7 +56,9 @@ namespace readParameterSets {
 
 class AVCCEncoding extends BoxEncoding {
 
-    public override readonly type: FourCC = "avcC";
+    constructor() {
+        super("avcC");
+    }
 
     public override encodingLength(obj: AVCConfigurationBox): number {
         return super.encodingLength(obj); // TODO implement
@@ -150,13 +152,6 @@ export interface AVCBox extends VisualSampleEntry {
 }
 
 class AVCEncoding extends VisualSampleEntryEncoding {
-
-    public override readonly type: FourCC;
-
-    constructor(type: string) {
-        super();
-        this.type = type;
-    }
 
     public override decode(buffer: Buffer, header?: BoxHeader): AVCBox | number {
         const superBox = super.decode(buffer, header);

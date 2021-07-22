@@ -2,7 +2,7 @@ import type {Buffer} from "buffer";
 import type {BoxHeader, FourCC, FullBox} from "@isomp4/core";
 import {BoxContainer, FullBoxEncoding} from "@isomp4/core";
 import type {AVCBox} from "./samples/avc.js";
-import {getAVCCodec} from "./samples/avc.js";
+import {avc1, avc2, avc3, avc4, getAVCCodec} from "./samples/avc.js";
 
 export interface SampleDescriptionBox extends FullBox {
 }
@@ -10,6 +10,10 @@ export interface SampleDescriptionBox extends FullBox {
 class SampleDescriptionBoxEncoding extends FullBoxEncoding {
 
     public override readonly type: FourCC = "stsd";
+
+    constructor() {
+        super("stsd", avc1, avc2, avc3, avc4);
+    }
 
     public override encodingLength(obj: SampleDescriptionBox): number {
         return super.encodingLength(obj); // TODO implement

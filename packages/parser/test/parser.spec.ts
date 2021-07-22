@@ -3,7 +3,7 @@ import {expect} from "chai";
 import {readFileSync} from "fs";
 import {join} from "path";
 import type {SampleDescriptionBox} from "@isomp4/box-moov";
-import {avc1, getVideoCodec, mdia, minf, moov, stbl, stsd, trak} from "@isomp4/box-moov";
+import {getVideoCodec, moov, stsd} from "@isomp4/box-moov";
 import type {Box, BoxHeader} from "@isomp4/core";
 import {MP4Parser} from "@isomp4/parser";
 import {BoxContainer} from "@isomp4/core";
@@ -105,7 +105,7 @@ describe("parser", () => {
         let videoCodec: string | undefined;
 
         const parser = new MP4Parser();
-        parser.registerBox(moov, trak, mdia, minf, stbl, stsd, avc1);
+        parser.registerBox(stsd, true);
         parser.boxEnded = (header: BoxHeader, box?: Box) => {
             if (box != null && box.type === "stsd") {
                 videoCodec = getVideoCodec(box as SampleDescriptionBox);
