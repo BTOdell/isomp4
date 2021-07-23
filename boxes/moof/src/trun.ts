@@ -2,11 +2,81 @@ import type {Buffer} from "buffer";
 import type {BoxHeader, FullBox} from "@isomp4/core";
 import {FullBoxEncoding} from "@isomp4/core";
 
-interface TrackRunSample {
+export interface TrackRunSample {
     duration?: number;
     size?: number;
     flags?: number;
     compositionTimeOffset?: number;
+}
+
+export namespace TrackRunSample {
+
+    type UInt2 = 0 | 1 | 2 | 3;
+
+    export interface Flags {
+
+        /**
+         * - 0: the leading nature of this sample is unknown.
+         * - 1: this sample is a leading sample that has a dependency
+         * before the referenced I‐picture (and is therefore not decodable).
+         * - 2: this sample is not a leading sample.
+         * - 3: this sample is a leading sample that has no dependency
+         * before the referenced I‐picture (and is therefore decodable).
+         */
+        isLeading: UInt2;
+
+        /**
+         * - 0: the dependency of this sample is unknown.
+         * - 1: this sample does depend on others (not an I picture).
+         * - 2: this sample does not depend on others (I picture).
+         * - 3: reserved.
+         */
+        dependsOn: UInt2;
+
+        /**
+         * - 0: the dependency of other samples on this sample is unknown.
+         * - 1: other samples may depend on this one (not disposable).
+         * - 2: no other sample depends on this one (disposable).
+         * - 3: reserved.
+         */
+        isDependedOn: UInt2;
+
+        /**
+         * - 0: it is unknown whether there is redundant coding in this sample.
+         * - 1: there is redundant coding in this sample.
+         * - 2: there is no redundant coding in this sample.
+         * - 3: reserved.
+         */
+        hasRedundancy: UInt2;
+
+        /**
+         * A byte-alignment padding value (from 0 to 7, inclusive).
+         */
+        paddingValue: number;
+
+        /**
+         * Whether the sample is a keyframe (I picture).
+         */
+        isSync: boolean;
+
+        degradationPriority: number;
+
+    }
+
+    export function parseFlags(flags: number): Flags {
+        // Flags is in big-endian format, so first bit fields are high bits
+        return {
+            // 4 bits reserved
+            isLeading: (flags >>> 26 & 0b11) as UInt2,
+            dependsOn: (flags >>> 24 & 0b11) as UInt2,
+            isDependedOn: (flags >>> 22 & 0b11) as UInt2,
+            hasRedundancy: (flags >>> 20 & 0b11) as UInt2,
+            paddingValue: flags >>> 17 & 0b111,
+            isSync: (flags >>> 16 & 0b1) === 0,
+            degradationPriority: flags & 0xFFFF,
+        };
+    }
+
 }
 
 export interface TrackRunBox extends FullBox {
