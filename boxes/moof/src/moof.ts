@@ -1,29 +1,9 @@
-import type {Buffer} from "buffer";
-import type {Box, BoxHeader} from "@isomp4/core";
 import {BoxEncoding} from "@isomp4/core";
+import {mfhd} from "./mfhd.js";
+import {tfhd} from "./tfhd.js";
 
-export interface MovieFragmentBox extends Box {
-}
+export const traf = new BoxEncoding("traf", tfhd);
+export const moof = new BoxEncoding("moof", mfhd, traf);
 
-class MovieFragmentBoxEncoding extends BoxEncoding {
-
-    constructor() {
-        super("moof");
-    }
-
-    public override encodingLength(obj: MovieFragmentBox): number {
-        return 0;
-    }
-
-    public override encodeTo(obj: MovieFragmentBox, buf: Buffer): number {
-        // TODO
-        throw "implement";
-    }
-
-    public override decode(buffer: Buffer, header?: BoxHeader): MovieFragmentBox | number {
-        return 0;
-    }
-
-}
-
-export const moof = new MovieFragmentBoxEncoding();
+export * from "./mfhd.js";
+export * from "./tfhd.js";
