@@ -71,3 +71,36 @@ export function readMatrix(buffer: Buffer, offset: number, n: number): number[] 
     }
     return mat;
 }
+
+/**
+ * Reads a null-terminated UTF-8 string from the buffer.
+ * @param buffer The buffer to read from.
+ * @param offset The offset in the buffer to read from.
+ * @return A decoded string,
+ * or if there isn't enough data in the buffer, returns the total
+ * number of bytes needed to read the string.
+ */
+export function readString(buffer: Buffer, offset: number): string | number {
+    let end = offset;
+    search: {
+        const len = buffer.length;
+        for (; end < len; end++) {
+            if (buffer[end] === 0) {
+                break search;
+            }
+        }
+        // Ran out of bytes, need at least one more
+        return end - offset + 1;
+    }
+    readString.decodedBytes = end - offset + 1;
+    return buffer.toString("utf8", offset, end);
+}
+
+export namespace readString {
+
+    /**
+     * The number of bytes that were decoded by the last call to {@link readString}.
+     */
+    export let decodedBytes: number;
+
+}

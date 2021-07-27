@@ -1,5 +1,5 @@
 import type {Buffer} from "buffer";
-import type {Box, FourCC, BoxHeader} from "@isomp4/core";
+import type {Box, BoxHeader, FourCC} from "@isomp4/core";
 import {BoxEncoding, readFourCC} from "@isomp4/core";
 
 export interface FileTypeBox extends Box {
@@ -30,7 +30,7 @@ class FileTypeBoxEncoding extends BoxEncoding {
             return superBox;
         }
         const offset: number = this.decodedBytes;
-        const end: number = offset > 0 ? superBox.size : superBox.size - super.encodingLength(superBox);
+        const end: number = FileTypeBoxEncoding.end(superBox, header);
         if (buffer.length < end) {
             return end;
         }

@@ -138,6 +138,16 @@ export class BoxEncoding {
         return parsedHeader;
     }
 
+    /**
+     * Calculates the (exclusive) end index of the given box.
+     * @param box The box to get the end index of.
+     * @param header The optional header if it was parsed before the box.
+     * @return The end index of the box.
+     */
+    protected static end(box: Box, header?: BoxHeader): number {
+        return header == null ? box.size : box.size - BoxHeader.encodingLength(header);
+    }
+
 }
 
 /**
