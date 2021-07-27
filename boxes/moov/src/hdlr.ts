@@ -1,7 +1,6 @@
 import type {Buffer} from "buffer";
 import type {BoxHeader, FourCC, FullBox} from "@isomp4/core";
-import {FullBoxEncoding} from "@isomp4/core";
-import {readString} from "@isomp4/core/src/BufferUtils";
+import {FullBoxEncoding, readString} from "@isomp4/core";
 
 export interface HandlerBox extends FullBox {
 
