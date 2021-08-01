@@ -1,6 +1,6 @@
 {
   "name": "@isomp4/core",
-  "version": "0.2.2",
+  "version": "0.2.4",
   "description": "Defines base types and interfaces",
   "keywords": [
     "iso",
