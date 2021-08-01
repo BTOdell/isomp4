@@ -193,26 +193,11 @@ export abstract class AbstractMP4Parser {
                 // Have enough data
                 this.onBoxData(header, buffer.slice(0, needed));
             }
-            // End box
-            if (top.box != null) {
-                this.onBoxEnded(header, top.box);
-            } else {
-                this.onBoxEnded(header);
-            }
             // Pop box state
-            this.boxStack.pop();
-            // Check next box state
-            if (this.boxStack.length > 0) {
-                const next = this.boxStack[this.boxStack.length - 1];
-                next.offset += header.size;
-                if (top.box != null && next.box != null && BoxContainer.isInstance(next.box)) {
-                    BoxContainer.add(next.box, top.box);
-                }
-            }
-            // Trigger parsing of next box
-            this.currentBox = null;
+            this.popBoxStack(top);
             return needed;
         }
+        let headerConsumed: number = 0;
         if (this.currentBox == null) {
             const header: BoxHeader | number = BoxHeader.parse(buffer);
             if (typeof header === "number") {
@@ -228,7 +213,8 @@ export abstract class AbstractMP4Parser {
                 headerLength,
                 content,
             };
-            return headerLength;
+            buffer = buffer.slice(headerLength);
+            headerConsumed += headerLength;
         }
         const header: BoxHeader = this.currentBox.header;
         if (this.currentBox.content) {
@@ -237,24 +223,26 @@ export abstract class AbstractMP4Parser {
                 const box = encoding.decode(buffer, header);
                 if (typeof box === "number") {
                     this.bytesNeeded = box;
-                    return 0;
+                    return headerConsumed;
                 }
-                const consumed = encoding.decodedBytes;
+                const decodeConsumed = encoding.decodedBytes;
                 // Invoke box decoded event
-                const children = this.onBoxDecoded(box, buffer.slice(0, consumed));
+                const children = this.onBoxDecoded(box, buffer.slice(0, decodeConsumed));
                 // Push box onto stack (and record whether to parse children)
                 this.boxStack.push({
                     header,
                     box,
                     children,
-                    offset: this.currentBox.headerLength + consumed,
+                    offset: this.currentBox.headerLength + decodeConsumed,
                 });
                 // Trigger parsing of child boxes
                 if (children) {
                     (box as BoxContainer).children = {};
                     this.currentBox = null;
                 }
-                return consumed;
+                // Check box stack before returning
+                this.checkBoxStack();
+                return headerConsumed + decodeConsumed;
             }
             // No encoding, so reset content boolean
             this.currentBox.content = false;
@@ -266,7 +254,41 @@ export abstract class AbstractMP4Parser {
             children: false,
             offset: this.currentBox.headerLength,
         });
-        return this.processBuffer(buffer);
+        return headerConsumed + this.processBuffer(buffer);
+    }
+
+    private checkBoxStack(): void {
+        if (this.boxStack.length > 0) {
+            const top: BoxState = this.boxStack[this.boxStack.length - 1];
+            if (top.offset >= top.header.size) {
+                this.popBoxStack(top);
+            }
+        }
+    }
+
+    private popBoxStack(top: BoxState): void {
+        do {
+            // End box
+            if (top.box != null) {
+                this.onBoxEnded(top.header, top.box);
+            } else {
+                this.onBoxEnded(top.header);
+            }
+            // Pop box state
+            this.boxStack.pop();
+            // Check next box state
+            if (this.boxStack.length <= 0) {
+                break;
+            }
+            const parent = this.boxStack[this.boxStack.length - 1];
+            parent.offset += top.header.size;
+            if (top.box != null && parent.box != null && BoxContainer.isInstance(parent.box)) {
+                BoxContainer.add(parent.box, top.box);
+            }
+            top = parent;
+        } while (top.offset >= top.header.size);
+        // Trigger parsing of next box
+        this.currentBox = null;
     }
 
     /**

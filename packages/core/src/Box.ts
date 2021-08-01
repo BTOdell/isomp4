@@ -109,8 +109,6 @@ export namespace BoxHeader {
             size = Number(largesize);
         } else if (size < headerLength) {
             throw new Error("invalid box size: " + size);
-        } else if (size === headerLength) {
-            throw new Error("empty box not supported");
         }
         // Check for user-defined type
         let usertype: Buffer | undefined;

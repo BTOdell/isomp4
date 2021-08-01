@@ -44,6 +44,7 @@
     "@isomp4/core": "file:../core"
   },
   "devDependencies": {
+    "@isomp4/box-moof": "file:../../boxes/moof",
     "@isomp4/box-moov": "file:../../boxes/moov"
   },
   "scripts": {

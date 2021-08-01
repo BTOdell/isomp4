@@ -5,8 +5,8 @@ import {join} from "path";
 import type {SampleDescriptionBox} from "@isomp4/box-moov";
 import {getVideoCodec, moov, stsd} from "@isomp4/box-moov";
 import type {Box, BoxHeader} from "@isomp4/core";
-import {MP4Parser} from "@isomp4/parser";
 import {BoxContainer} from "@isomp4/core";
+import {MP4Parser} from "@isomp4/parser";
 
 function read(relativePath: string): Buffer {
     return readFileSync(join(__dirname, relativePath));
