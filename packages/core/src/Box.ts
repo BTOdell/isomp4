@@ -95,7 +95,7 @@ export namespace BoxHeader {
         let offset: number = 8;
         let largesize: bigint | undefined;
         if (size === 0) {
-            throw new Error("box cannot extend indefinitely");
+            throw new Error("box cannot extend indefinitely (type: " + type + ")");
         } else if (size === 1) {
             if (buffer.length < (headerLength += 8)) {
                 return headerLength;
