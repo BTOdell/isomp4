@@ -95,20 +95,21 @@ export namespace BoxHeader {
         let offset: number = 8;
         let largesize: bigint | undefined;
         if (size === 0) {
-            throw new Error("box cannot extend indefinitely (type: " + type + ")");
+            throw new Error("Box cannot extend indefinitely (type: " + type +
+                " | 0x" + buffer.toString("hex", 4, 8).padStart(8, "0") + ")");
         } else if (size === 1) {
             if (buffer.length < (headerLength += 8)) {
                 return headerLength;
             }
             largesize = buffer.readBigUInt64BE(offset).valueOf();
             if (largesize > MAX_SAFE_BIGINT) {
-                throw new Error("largesize mode is not supported");
+                throw new Error("Largesize mode is not supported");
             }
             offset += 8;
             // If the largesize can be stored in the normal size, then do so
             size = Number(largesize);
         } else if (size < headerLength) {
-            throw new Error("invalid box size: " + size);
+            throw new Error("Invalid box size: " + size);
         }
         // Check for user-defined type
         let usertype: Buffer | undefined;
