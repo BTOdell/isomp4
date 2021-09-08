@@ -134,7 +134,11 @@ class AVCCEncoding extends BoxEncoding {
                     break;
                 }
                 default:
+                    if (buffer.length < end) {
+                        return end;
+                    }
                     ext = Buffer.from(buffer.slice(offset, end));
+                    offset = end;
                     break;
             }
         }
