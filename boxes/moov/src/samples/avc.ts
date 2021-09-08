@@ -12,11 +12,15 @@ export interface AVCConfigurationBox extends Box {
     lengthSizeMinusOne: number;
     sequenceParameterSets: Buffer[];
     pictureParameterSets: Buffer[];
-    // High profile fields
-    chromaFormat?: number;
-    bitDepthLumaMinus8?: number;
-    bitDepthChromaMinus8?: number;
-    sequenceParameterSetsExt?: Buffer[];
+    // Extended fields (for high profiles)
+    ext?: Ext | Buffer;
+}
+
+interface Ext {
+    chromaFormat: number;
+    bitDepthLumaMinus8: number;
+    bitDepthChromaMinus8: number;
+    sequenceParameterSetsExt: Buffer[];
 }
 
 function toHexByte(value: number): string {
@@ -99,30 +103,43 @@ class AVCCEncoding extends BoxEncoding {
             return pictureParameterSets;
         }
         offset = readParameterSets.offset;
-        // Handle high profiles
-        let chromaFormat: number | undefined;
-        let bitDepthLumaMinus8: number | undefined;
-        let bitDepthChromaMinus8: number | undefined;
-        let sequenceParameterSetsExt: Buffer[] | undefined;
-        switch (profileIndication) {
-            case 100: // high
-            case 110: // high 10
-            case 122: // high 4:2:2
-            case 144: // unknown
-            {
-                if (buffer.length < offset + 3) {
-                    return offset + 3;
+        // Handle extended fields
+        let ext: Ext | Buffer | undefined;
+        // Verify that more data is available to read in the box
+        const end = BoxEncoding.end(superBox, header);
+        if (offset < end) {
+            switch (profileIndication) {
+                case 100: // high
+                case 110: // high 10
+                case 122: // high 4:2:2
+                case 144: // unknown
+                {
+                    if (buffer.length < offset + 3) {
+                        return offset + 3;
+                    }
+                    const chromaFormat = buffer.readUInt8(offset++) & 0b11;
+                    const bitDepthLumaMinus8 = buffer.readUInt8(offset++) & 0b111;
+                    const bitDepthChromaMinus8 = buffer.readUInt8(offset++) & 0b111;
+                    const sequenceParameterSetsExt = readParameterSets(buffer, offset, 0b11111111);
+                    if (typeof sequenceParameterSetsExt === "number") {
+                        return sequenceParameterSetsExt;
+                    }
+                    ext = {
+                        chromaFormat,
+                        bitDepthLumaMinus8,
+                        bitDepthChromaMinus8,
+                        sequenceParameterSetsExt,
+                    };
+                    offset = readParameterSets.offset;
+                    break;
                 }
-                chromaFormat = buffer.readUInt8(offset++) & 0b11;
-                bitDepthLumaMinus8 = buffer.readUInt8(offset++) & 0b111;
-                bitDepthChromaMinus8 = buffer.readUInt8(offset++) & 0b111;
-                const _sequenceParameterSetsExt = readParameterSets(buffer, offset, 0b11111111);
-                if (typeof _sequenceParameterSetsExt === "number") {
-                    return _sequenceParameterSetsExt;
-                }
-                sequenceParameterSetsExt = _sequenceParameterSetsExt;
-                offset = readParameterSets.offset;
-                break;
+                default:
+                    if (buffer.length < end) {
+                        return end;
+                    }
+                    ext = Buffer.from(buffer.slice(offset, end));
+                    offset = end;
+                    break;
             }
         }
         this.decodedBytes = offset;
@@ -135,11 +152,7 @@ class AVCCEncoding extends BoxEncoding {
             lengthSizeMinusOne,
             sequenceParameterSets,
             pictureParameterSets,
-            // High profile fields
-            chromaFormat,
-            bitDepthLumaMinus8,
-            bitDepthChromaMinus8,
-            sequenceParameterSetsExt,
+            ext,
         };
     }
 
